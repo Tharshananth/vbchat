@@ -2,9 +2,9 @@
 import logging
 from pathlib import Path
 from typing import List, Optional
-from langchain_core.documents import Document  # ← FIXED
+from langchain_core.documents import Document
 from langchain_chroma import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from config import get_config
 from .embeddings import get_embeddings
 

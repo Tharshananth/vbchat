@@ -1,34 +1,71 @@
 """
-PRODUCTION CHAT ENDPOINT
-Rock-solid with error handling, monitoring, and failover
+Simplified Chat Endpoint with Configurable LangChain Memory
+Uses settings from config.yaml for buffer window size and token limits
 """
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field, validator
-from typing import List, Optional
+from typing import List, Optional, Dict
 from sqlalchemy.orm import Session
 import logging
 import uuid
 from datetime import datetime
 
-from database import get_db
-from services.chat_memory_service import get_memory_service, ChatMemoryService
+from database import get_db, FeedbackInteraction
 from llm.factory import get_llm_factory
 from llm.base import Message
 from vector_db.retriever import DocumentRetriever
-from config import get_config
-from redis import Redis
+from config import get_config, get_conversation_memory_config
+from langchain.memory import ConversationBufferWindowMemory
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
-# Initialize Redis (optional)
-try:
-    redis_client = Redis(host='localhost', port=6379, decode_responses=True, socket_timeout=2)
-    redis_client.ping()
-    logger.info("✅ Redis available")
-except:
-    redis_client = None
-    logger.warning("⚠️ Redis unavailable, using DB-only mode")
+# In-memory session storage for LangChain memory
+session_memories: Dict[str, ConversationBufferWindowMemory] = {}
+
+def get_or_create_memory(session_id: str) -> ConversationBufferWindowMemory:
+    """Get or create conversation memory for session using config settings"""
+    if session_id not in session_memories:
+        # Load memory configuration
+        memory_config = get_conversation_memory_config()
+        buffer_config = memory_config.buffer_window
+        
+        # Create memory with configured settings
+        session_memories[session_id] = ConversationBufferWindowMemory(
+            k=buffer_config.k,  # From config
+            return_messages=buffer_config.return_messages,
+            memory_key=buffer_config.memory_key
+        )
+        
+        logger.info(f"Created memory for session {session_id} with k={buffer_config.k}, max_tokens={buffer_config.max_tokens}")
+    
+    return session_memories[session_id]
+
+def count_tokens_in_messages(messages: List[Dict]) -> int:
+    """
+    Simple token counting for messages
+    Approximate: 4 characters = 1 token
+    """
+    total_chars = sum(len(msg.get('content', '')) for msg in messages)
+    return total_chars // 4
+
+def check_token_limit(messages: List[Dict], max_tokens: int, warning_threshold: float) -> Dict[str, any]:
+    """
+    Check if messages are approaching token limit
+    Returns: dict with warning info
+    """
+    token_count = count_tokens_in_messages(messages)
+    warning_level = token_count / max_tokens
+    
+    result = {
+        'token_count': token_count,
+        'max_tokens': max_tokens,
+        'percentage': warning_level * 100,
+        'warning': warning_level >= warning_threshold,
+        'exceeds_limit': token_count > max_tokens
+    }
+    
+    return result
 
 # Pydantic Models
 class ChatMessage(BaseModel):
@@ -50,6 +87,14 @@ class Source(BaseModel):
     url: str
     content: str
 
+class TokenInfo(BaseModel):
+    message_tokens: int
+    history_tokens: int
+    total_tokens: int
+    max_tokens: int
+    percentage: float
+    warning: bool
+
 class ChatResponse(BaseModel):
     response: str
     sources: List[Source]
@@ -58,11 +103,7 @@ class ChatResponse(BaseModel):
     success: bool = True
     provider_used: str
     tokens_used: Optional[int] = None
-    context_expires_at: str
-    time_remaining_seconds: int
-    context_window_number: int
-    context_was_reset: bool = False
-    warning: Optional[str] = None
+    token_info: Optional[TokenInfo] = None
 
 class ErrorResponse(BaseModel):
     error: str
@@ -77,12 +118,10 @@ async def chat(
     db: Session = Depends(get_db)
 ):
     """
-    PRODUCTION CHAT ENDPOINT
-    - Thread-safe
-    - Redis + DB fallback
-    - Comprehensive error handling
-    - Token limit protection
-    - Context expiration handling
+    Chat endpoint with configurable LangChain conversation memory
+    - Stores last k Q&A exchanges (configured in config.yaml)
+    - Monitors token usage against configured limits
+    - No time-based context expiration
     """
     
     # Generate IDs
@@ -90,168 +129,155 @@ async def chat(
     user_id = request.user_id or "anonymous"
     message_id = f"msg_{uuid.uuid4().hex[:12]}"
     
-    logger.info(f"{'='*80}")
-    logger.info(f"📨 NEW REQUEST | Session: {session_id} | User: {user_id}")
-    logger.info(f"{'='*80}")
+    logger.info(f"Chat request | Session: {session_id} | User: {user_id}")
     
     try:
-        # ===== STEP 1: Initialize Services =====
-        memory_service = get_memory_service(redis_client)
+        # Initialize services and config
         llm_factory = get_llm_factory()
         retriever = DocumentRetriever()
         config = get_config()
+        memory_config = get_conversation_memory_config()
+        buffer_config = memory_config.buffer_window
+        token_config = memory_config.token_counting
         
-        # ===== STEP 2: Get Current Context Window =====
-        logger.info("📂 Getting context window...")
+        memory = get_or_create_memory(session_id)
         
-        try:
-            context = memory_service.get_or_create_context(
-                session_id=session_id,
-                user_id=user_id,
-                db=db
-            )
-            
-            logger.info(f"✅ Context loaded")
-            logger.info(f"   Window #{context.window_number}")
-            logger.info(f"   Expires: {context.window_end.isoformat()}")
-            logger.info(f"   Time remaining: {context.time_remaining():.0f}s")
-            logger.info(f"   Messages in context: {len(context.messages)}")
-            
-        except Exception as e:
-            logger.error(f"❌ Context loading failed: {e}", exc_info=True)
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to load conversation context: {str(e)}"
-            )
-        
-        # ===== STEP 3: Check Expiration (Double-check) =====
-        was_reset = False
-        if context.is_expired():
-            logger.warning("⏰ Context expired during request processing!")
-            try:
-                context = memory_service.reset_context(session_id, user_id, db)
-                was_reset = True
-                logger.info("✅ Context reset successfully")
-            except Exception as e:
-                logger.error(f"❌ Context reset failed: {e}")
-                # Continue anyway with empty context
-        
-        # ===== STEP 4: Retrieve Knowledge Base Context =====
-        logger.info("🔍 Retrieving from knowledge base...")
-        
+        # Retrieve knowledge base context
+        logger.info("Retrieving from knowledge base...")
         try:
             kb_context = retriever.retrieve_context(request.message)
-            logger.info(f"✅ Retrieved {len(kb_context['sources'])} sources")
+            logger.info(f"Retrieved {len(kb_context['sources'])} sources")
         except Exception as e:
-            logger.error(f"⚠️ Knowledge base retrieval failed: {e}")
-            # Fallback to empty context
+            logger.error(f"Knowledge base retrieval failed: {e}")
             kb_context = {
                 "context": "No additional context available.",
                 "sources": []
             }
         
-        # ===== STEP 5: Build LLM Messages =====
-        logger.info("🤖 Building LLM context...")
+        # Build messages for LLM
+        messages = []
         
-        try:
-            # Get historical messages
-            llm_messages = memory_service.build_llm_context(
-                context=context,
-                current_question=request.message
-            )
-            
-            # Add knowledge base context to the last message
-            if kb_context['context']:
-                last_msg = llm_messages[-1]
-                last_msg['content'] = f"""Context from knowledge base:
+        # Add conversation history from memory
+        history = memory.load_memory_variables({})
+        if history and buffer_config.memory_key in history:
+            for msg in history[buffer_config.memory_key]:
+                messages.append({
+                    "role": "user" if msg.type == "human" else "assistant",
+                    "content": msg.content
+                })
+        
+        # Check token usage in history
+        history_token_count = count_tokens_in_messages(messages)
+        
+        # Add current question with context
+        current_content = request.message
+        if kb_context['context']:
+            current_content = f"""Context from knowledge base:
 {kb_context['context']}
 
-User question: {last_msg['content']}
+User question: {request.message}
 
 Please answer based on the context above."""
-            
-            # Add context reset warning if needed
-            if was_reset:
-                system_warning = "[SYSTEM: Previous conversation context expired. This is a fresh conversation.]"
-                llm_messages.insert(0, {
-                    "role": "system",
-                    "content": system_warning
-                })
-            
-            logger.info(f"✅ Built {len(llm_messages)} messages for LLM")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to build LLM context: {e}", exc_info=True)
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to prepare conversation context: {str(e)}"
-            )
         
-        # ===== STEP 6: Generate LLM Response =====
-        logger.info(f"🧠 Generating response with {request.provider or 'default'} provider...")
+        messages.append({
+            "role": "user",
+            "content": current_content
+        })
+        
+        # Check total token usage
+        if token_config.enabled:
+            token_check = check_token_limit(
+                messages, 
+                buffer_config.max_tokens,
+                token_config.warning_threshold
+            )
+            
+            if token_check['exceeds_limit']:
+                logger.warning(f"Token limit exceeded: {token_check['token_count']} > {buffer_config.max_tokens}")
+                # Trim oldest messages
+                messages = messages[-(buffer_config.k * 2 + 1):]
+                logger.info(f"Trimmed to {len(messages)} messages")
+            
+            elif token_check['warning']:
+                logger.warning(f"Approaching token limit: {token_check['percentage']:.1f}%")
+        
+        logger.info(f"Built {len(messages)} messages for LLM")
+        
+        # Generate LLM response
+        logger.info(f"Generating response with {request.provider or 'default'} provider...")
         
         try:
             # Convert to Message objects
-            messages = [
+            llm_messages = [
                 Message(role=m['role'], content=m['content'])
-                for m in llm_messages
+                for m in messages
             ]
             
             # Generate with fallback
             llm_response = llm_factory.generate_with_fallback(
-                messages=messages,
+                messages=llm_messages,
                 system_prompt=config.system_prompt,
                 preferred_provider=request.provider
             )
             
             if llm_response.finish_reason == "error":
-                logger.error(f"❌ LLM generation failed: {llm_response.error}")
+                logger.error(f"LLM generation failed: {llm_response.error}")
                 raise Exception(f"LLM error: {llm_response.error}")
             
-            logger.info(f"✅ Response generated")
-            logger.info(f"   Provider: {llm_response.provider}")
-            logger.info(f"   Tokens: {llm_response.tokens_used}")
-            logger.info(f"   Length: {len(llm_response.content)} chars")
+            logger.info(f"Response generated | Provider: {llm_response.provider} | Tokens: {llm_response.tokens_used}")
             
         except Exception as e:
-            logger.error(f"❌ LLM generation failed: {e}", exc_info=True)
+            logger.error(f"LLM generation failed: {e}", exc_info=True)
             raise HTTPException(
                 status_code=500,
                 detail=f"Failed to generate response: {str(e)}"
             )
         
-        # ===== STEP 7: Save to Context & Database =====
-        logger.info("💾 Saving interaction...")
+        # Save to memory
+        memory.save_context(
+            {"input": request.message},
+            {"output": llm_response.content}
+        )
+        logger.info("Saved to conversation memory")
         
+        # Save to database
         try:
-            updated_context, _ = memory_service.add_interaction(
-                session_id=session_id,
+            interaction = FeedbackInteraction(
                 user_id=user_id,
+                session_id=session_id,
+                message_id=message_id,
+                timestamp=datetime.utcnow(),
                 question=request.message,
                 response=llm_response.content,
-                message_id=message_id,
-                provider=llm_response.provider,
-                db=db
+                provider_used=llm_response.provider,
+                tokens_used=llm_response.tokens_used
             )
             
-            logger.info("✅ Interaction saved")
-            logger.info(f"   Messages in context now: {len(updated_context.messages)}")
+            db.add(interaction)
+            db.commit()
+            db.refresh(interaction)
+            
+            logger.info("Saved to database")
             
         except Exception as e:
-            logger.error(f"⚠️ Failed to save interaction: {e}", exc_info=True)
-            # Don't fail the request, just log it
-            updated_context = context
+            logger.error(f"Failed to save to database: {e}", exc_info=True)
+            # Don't fail the request
         
-        # ===== STEP 8: Build Response =====
-        time_remaining = int(updated_context.time_remaining())
+        # Calculate final token info
+        message_tokens = count_tokens_in_messages([{"content": request.message}])
+        response_tokens = count_tokens_in_messages([{"content": llm_response.content}])
+        total_tokens = history_token_count + message_tokens + response_tokens
         
-        # Warning if context expiring soon
-        warning = None
-        if 0 < time_remaining < 60:
-            warning = f"Context expires in {time_remaining} seconds"
-        elif time_remaining == 0:
-            warning = "Context has expired"
+        token_info = TokenInfo(
+            message_tokens=message_tokens,
+            history_tokens=history_token_count,
+            total_tokens=total_tokens,
+            max_tokens=buffer_config.max_tokens,
+            percentage=(total_tokens / buffer_config.max_tokens) * 100,
+            warning=total_tokens >= (buffer_config.max_tokens * token_config.warning_threshold)
+        )
         
+        # Build response
         response = ChatResponse(
             response=llm_response.content,
             sources=[Source(**src) for src in kb_context['sources']],
@@ -260,15 +286,10 @@ Please answer based on the context above."""
             success=True,
             provider_used=llm_response.provider,
             tokens_used=llm_response.tokens_used,
-            context_expires_at=updated_context.window_end.isoformat(),
-            time_remaining_seconds=time_remaining,
-            context_window_number=updated_context.window_number,
-            context_was_reset=was_reset,
-            warning=warning
+            token_info=token_info
         )
         
-        logger.info(f"✅ REQUEST COMPLETE | Message ID: {message_id}")
-        logger.info(f"{'='*80}\n")
+        logger.info(f"Request complete | Message ID: {message_id}")
         
         return response
         
@@ -276,11 +297,8 @@ Please answer based on the context above."""
         raise
         
     except Exception as e:
-        # Catch-all error handler
-        logger.error(f"❌ UNHANDLED ERROR: {e}", exc_info=True)
-        logger.error(f"{'='*80}\n")
+        logger.error(f"Unhandled error: {e}", exc_info=True)
         
-        # Return error response
         error = ErrorResponse(
             error="Internal Server Error",
             detail=str(e),
@@ -291,89 +309,139 @@ Please answer based on the context above."""
         raise HTTPException(status_code=500, detail=error.dict())
 
 
-@router.get("/session/{session_id}/info")
-async def get_session_info(
+@router.get("/memory/info/{session_id}")
+async def get_memory_info(session_id: str):
+    """Get memory configuration and current state for a session"""
+    
+    memory_config = get_conversation_memory_config()
+    buffer_config = memory_config.buffer_window
+    token_config = memory_config.token_counting
+    
+    info = {
+        "session_id": session_id,
+        "config": {
+            "type": memory_config.type,
+            "buffer_window_k": buffer_config.k,
+            "max_tokens": buffer_config.max_tokens,
+            "memory_key": buffer_config.memory_key,
+            "token_counting_enabled": token_config.enabled,
+            "warning_threshold": token_config.warning_threshold
+        },
+        "session_exists": session_id in session_memories
+    }
+    
+    if session_id in session_memories:
+        memory = session_memories[session_id]
+        history = memory.load_memory_variables({})
+        
+        if history and buffer_config.memory_key in history:
+            messages = history[buffer_config.memory_key]
+            message_list = [
+                {
+                    "type": msg.type,
+                    "content": msg.content[:100] + "..." if len(msg.content) > 100 else msg.content
+                }
+                for msg in messages
+            ]
+            
+            # Calculate tokens
+            full_messages = [{"content": msg.content} for msg in messages]
+            token_count = count_tokens_in_messages(full_messages)
+            
+            info["current_state"] = {
+                "message_count": len(messages),
+                "messages": message_list,
+                "estimated_tokens": token_count,
+                "token_percentage": (token_count / buffer_config.max_tokens) * 100
+            }
+        else:
+            info["current_state"] = {
+                "message_count": 0,
+                "messages": [],
+                "estimated_tokens": 0,
+                "token_percentage": 0
+            }
+    
+    return info
+
+
+@router.get("/history/{session_id}")
+async def get_chat_history(
     session_id: str,
     db: Session = Depends(get_db)
 ):
-    """Get session information"""
+    """Get chat history for a session from database"""
     
     try:
-        memory_service = get_memory_service(redis_client)
-        context = memory_service.get_or_create_context(session_id, "unknown", db)
+        interactions = db.query(FeedbackInteraction).filter(
+            FeedbackInteraction.session_id == session_id
+        ).order_by(FeedbackInteraction.timestamp.asc()).all()
+        
+        history = []
+        for interaction in interactions:
+            history.append({
+                "message_id": interaction.message_id,
+                "timestamp": interaction.timestamp.isoformat(),
+                "question": interaction.question,
+                "response": interaction.response,
+                "provider": interaction.provider_used,
+                "feedback_type": interaction.feedback_type
+            })
         
         return {
             "session_id": session_id,
-            "window_number": context.window_number,
-            "window_start": context.window_start.isoformat(),
-            "window_end": context.window_end.isoformat(),
-            "time_remaining_seconds": int(context.time_remaining()),
-            "is_expired": context.is_expired(),
-            "messages_count": len(context.messages),
-            "messages": [
-                {
-                    "role": m.role,
-                    "content": m.content[:100] + "..." if len(m.content) > 100 else m.content,
-                    "timestamp": m.timestamp.isoformat(),
-                    "tokens": m.tokens
-                }
-                for m in context.messages
-            ]
+            "message_count": len(history),
+            "history": history
         }
     except Exception as e:
-        logger.error(f"Failed to get session info: {e}")
+        logger.error(f"Failed to get history: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/session/{session_id}/reset")
-async def reset_session(
+@router.delete("/history/{session_id}")
+async def delete_chat_history(
     session_id: str,
     db: Session = Depends(get_db)
 ):
-    """Manually reset session context"""
+    """Delete chat history for a session"""
     
     try:
-        memory_service = get_memory_service(redis_client)
-        context = memory_service.reset_context(session_id, "manual_reset", db)
+        # Delete from memory
+        if session_id in session_memories:
+            del session_memories[session_id]
+        
+        # Delete from database
+        deleted = db.query(FeedbackInteraction).filter(
+            FeedbackInteraction.session_id == session_id
+        ).delete()
+        
+        db.commit()
         
         return {
             "success": True,
-            "message": "Context reset successfully",
-            "new_window_number": context.window_number,
-            "new_expiry": context.window_end.isoformat(),
-            "time_remaining_seconds": int(context.time_remaining())
+            "message": f"Deleted {deleted} messages from session {session_id}"
         }
     except Exception as e:
-        logger.error(f"Failed to reset session: {e}")
+        logger.error(f"Failed to delete history: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/session/{session_id}")
-async def delete_session(
-    session_id: str,
-    db: Session = Depends(get_db)
-):
-    """Delete session and all its data"""
+@router.post("/clear/{session_id}")
+async def clear_session_memory(session_id: str):
+    """Clear in-memory conversation history for a session"""
     
     try:
-        # Delete from Redis
-        if redis_client:
-            redis_client.delete(f"chat:context:{session_id}")
-        
-        # Mark as inactive in DB
-        from database import ChatSession
-        session = db.query(ChatSession).filter(
-            ChatSession.session_id == session_id
-        ).first()
-        
-        if session:
-            session.is_active = False
-            db.commit()
-        
-        return {
-            "success": True,
-            "message": f"Session {session_id} deleted"
-        }
+        if session_id in session_memories:
+            del session_memories[session_id]
+            return {
+                "success": True,
+                "message": f"Cleared memory for session {session_id}"
+            }
+        else:
+            return {
+                "success": True,
+                "message": f"No memory found for session {session_id}"
+            }
     except Exception as e:
-        logger.error(f"Failed to delete session: {e}")
+        logger.error(f"Failed to clear memory: {e}")
         raise HTTPException(status_code=500, detail=str(e))

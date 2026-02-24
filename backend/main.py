@@ -1,25 +1,10 @@
 """
-PingUs RAG Chatbot - Main Application
-Production-ready FastAPI application with multi-model LLM support
+Main Application - Simplified
+No Redis, No 5-minute context window
+Uses LangChain ConversationBufferWindowMemory
 """
-"""
-Quick fix for Windows console encoding issues
-Add this to the TOP of your main.py file
-"""
-
-# Fix Windows console encoding for emojis
 import sys
 import io
-
-# Force UTF-8 encoding for stdout/stderr
-if sys.platform == 'win32':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
-
-# Rest of your main.py imports continue below...
-
-import os
-import sys
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -30,23 +15,25 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import logging
 from contextlib import asynccontextmanager
-from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
-from fastapi.openapi.utils import get_openapi
-from routers import chat_router, documents_router, health_router, config_router, feedback_router
 
+# Fix Windows console encoding
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-# Add parent directory to path for imports
+# Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from config import get_config, get_api_config
 from utils.logger import setup_logger
-from routers import chat_router, documents_router, health_router, config_router, feedback_router
+from routers import documents_router, health_router, config_router, feedback_router
+from routers.chat import router as chat_router  # Import simplified chat router
 from vector_db.retriever import DocumentRetriever
 from utils.document_loader import DocumentLoader
-from database import init_db  # NEW: Import database initialization
+from database import init_db
 
 # Setup logging
-logger = setup_logger("pingus")
+logger = setup_logger("app")
 
 # Load configuration
 config = get_config()
@@ -57,9 +44,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for startup/shutdown events
-    """
+    """Lifespan context manager for startup/shutdown events"""
     # Startup
     logger.info("=" * 60)
     logger.info(f"Starting {config.app.name} v{config.app.version}")
@@ -69,26 +54,12 @@ async def lifespan(app: FastAPI):
     # Initialize database
     try:
         init_db()
-        logger.info("✅ Database initialized")
+        logger.info("Database initialized")
     except Exception as e:
-        logger.error(f"❌ Database initialization failed: {e}")
-    
-    # Initialize Redis (NEW)
-    try:
-        from redis import Redis
-        redis_client = Redis(host=os.getenv('REDIS_HOST', 'localhost'), 
-                            port=int(os.getenv('REDIS_PORT', 6379)), 
-                            decode_responses=True,
-                            socket_timeout=2)
-        redis_client.ping()
-        logger.info("✅ Redis connected")
-        app.state.redis = redis_client
-    except Exception as e:
-        logger.warning(f"⚠️ Redis unavailable: {e}. Using DB-only mode.")
-        app.state.redis = None
+        logger.error(f"Database initialization failed: {e}")
     
     try:
-        # Initialize vector store with existing documents
+        # Initialize vector store
         logger.info("Initializing vector store...")
         retriever = DocumentRetriever()
         doc_count = retriever.get_vector_store().get_document_count()
@@ -100,42 +71,39 @@ async def lifespan(app: FastAPI):
             
             if docs:
                 chunks = retriever.get_vector_store().add_documents(docs)
-                logger.info(f"✅ Loaded {len(docs)} documents ({chunks} chunks)")
+                logger.info(f"Loaded {len(docs)} documents ({chunks} chunks)")
             else:
                 logger.warning("No documents found in data directory")
         else:
-            logger.info(f"✅ Vector store ready with {doc_count} documents")
+            logger.info(f"Vector store ready with {doc_count} documents")
         
         # Log available LLM providers
         from llm.factory import get_llm_factory
         factory = get_llm_factory()
         available = factory.get_available_providers()
-        logger.info(f"✅ Available LLM providers: {', '.join(available) if available else 'None'}")
-        logger.info(f"✅ Default provider: {config.llm.default_provider}")
+        logger.info(f"Available LLM providers: {', '.join(available) if available else 'None'}")
+        logger.info(f"Default provider: {config.llm.default_provider}")
         
-        logger.info("✅ Startup complete!")
+        logger.info("Startup complete")
         logger.info("=" * 60)
         
     except Exception as e:
-        logger.error(f"❌ Startup error: {e}")
+        logger.error(f"Startup error: {e}")
         logger.warning("Application started with errors")
     
     yield
     
     # Shutdown
     logger.info("Shutting down application...")
-    if hasattr(app.state, 'redis') and app.state.redis:
-        app.state.redis.close()
-        logger.info("✅ Redis connection closed")
-        
+
 # Create FastAPI app
 app = FastAPI(
-    title="PingUs RAG Chatbot",
+    title="VoxelBox RAG Chatbot",
     description="AI-powered chatbot with RAG capabilities",
     version="2.0.0",
-    docs_url=None,  # Disable default docs URL
-    redoc_url=None,  # Disable default redoc URL
-    lifespan=lifespan  # Add lifespan handler
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Add rate limiting
@@ -146,31 +114,22 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 if api_config.cors.enabled:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Allow all origins
+        allow_origins=["*"],
         allow_credentials=True,
-        allow_methods=["*"],  # Allow all methods
-        allow_headers=["*"],  # Allow all headers
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
     logger.info("CORS enabled for all origins")
 
 # Add GZip compression
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-from fastapi.staticfiles import StaticFiles
-import os
-
-static_dir = os.path.join(os.path.dirname(__file__), "static")
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir)
-   
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 # Register routers
 app.include_router(chat_router)
 app.include_router(documents_router)
 app.include_router(health_router)
 app.include_router(config_router)
-app.include_router(feedback_router)  # NEW: Feedback router
+app.include_router(feedback_router)
 
 # Root endpoint
 @app.get("/", include_in_schema=False)
@@ -183,39 +142,11 @@ async def root():
         "docs": "/docs"
     }
 
-# Health check (duplicate for convenience)
+# Health check
 @app.get("/health", include_in_schema=False)
 async def health():
     """Simple health check"""
     return {"status": "healthy"}
-
-
-# Custom documentation endpoints
-@app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
-    return get_swagger_ui_html(
-        openapi_url="/openapi.json",
-        title="PingUs API Documentation",
-        swagger_js_url="/static/swagger-ui-bundle.js",
-        swagger_css_url="/static/swagger-ui.css",
-    )
-
-@app.get("/redoc", include_in_schema=False)
-async def redoc_html():
-    return get_redoc_html(
-        openapi_url="/openapi.json",
-        title="PingUs API Documentation",
-    )
-
-@app.get("/openapi.json", include_in_schema=False)
-async def get_openapi_json():
-    return get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )
-
 
 # Request logging middleware
 @app.middleware("http")

@@ -36,6 +36,28 @@ class LLMConfig(BaseModel):
     fallback_order: List[str]
     providers: Dict[str, ProviderConfig]
 
+class BufferWindowConfig(BaseModel):
+    k: int = Field(default=5, description="Number of Q&A exchanges to keep")
+    max_tokens: int = Field(default=2000, description="Maximum tokens in conversation history")
+    return_messages: bool = Field(default=True, description="Return messages as LangChain Message objects")
+    memory_key: str = Field(default="chat_history", description="Memory key for storing history")
+
+class ConversationSessionConfig(BaseModel):
+    persistent: bool = Field(default=False, description="Enable persistent memory across restarts")
+    connection_string: str = Field(default="sqlite:///data/database/chat_memory.db")
+    cleanup_after_hours: int = Field(default=24, description="Auto-cleanup old sessions")
+
+class TokenCountingConfig(BaseModel):
+    enabled: bool = Field(default=True, description="Enable token counting")
+    encoding: str = Field(default="cl100k_base", description="Encoding for token counting")
+    warning_threshold: float = Field(default=0.8, description="Warn at percentage of max_tokens")
+
+class ConversationMemoryConfig(BaseModel):
+    type: str = Field(default="buffer_window", description="Type of memory: buffer_window, summary, entity")
+    buffer_window: BufferWindowConfig
+    session: ConversationSessionConfig
+    token_counting: TokenCountingConfig
+
 class EmbeddingProviderConfig(BaseModel):
     model: str
     api_key_env: str
@@ -130,6 +152,7 @@ class MonitoringConfig(BaseModel):
 class Config(BaseModel):
     app: AppConfig
     llm: LLMConfig
+    conversation_memory: ConversationMemoryConfig
     embeddings: EmbeddingsConfig
     vector_db: VectorDBConfig
     documents: DocumentsConfig
@@ -142,9 +165,6 @@ class Config(BaseModel):
 
 # Global config instance
 _config: Optional[Config] = None
-
-
-
 
 def load_config(config_path: str = "config.yaml") -> Config:
     """Load configuration from YAML file"""
@@ -166,9 +186,6 @@ def load_config(config_path: str = "config.yaml") -> Config:
     _config = Config(**config_data)
     return _config
 
-
-
-
 def get_config() -> Config:
     """Get loaded configuration"""
     if _config is None:
@@ -182,6 +199,10 @@ def get_api_config() -> APIConfig:
 def get_llm_config() -> LLMConfig:
     """Get LLM configuration"""
     return get_config().llm
+
+def get_conversation_memory_config() -> ConversationMemoryConfig:
+    """Get conversation memory configuration"""
+    return get_config().conversation_memory
 
 def get_logging_config() -> LoggingConfig:
     """Get logging configuration"""

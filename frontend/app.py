@@ -1,11 +1,7 @@
 import streamlit as st
 import requests
-from datetime import datetime, timezone, timedelta
-import json
-from pathlib import Path
+from datetime import datetime
 import time
-import threading
-
 
 # Configuration
 API_BASE_URL = "http://localhost:8000"
@@ -16,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Enhanced CSS with timer animations
+# CSS
 st.markdown("""
 <style>
     .main-header {
@@ -55,101 +51,8 @@ st.markdown("""
         border-left: 4px solid #ffc107;
         margin-top: 0.5rem;
     }
-    .feedback-buttons {
-        margin-top: 0.5rem;
-        display: flex;
-        gap: 0.5rem;
-    }
     .stButton>button {
         width: 100%;
-    }
-    
-    /* Timer Container Styles */
-    .timer-container {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 1rem;
-        text-align: center;
-        margin: 1rem 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .timer-text {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-        font-family: 'Courier New', monospace;
-        letter-spacing: 2px;
-    }
-    
-    .timer-warning {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        animation: pulse 2s infinite;
-    }
-    
-    .timer-expired {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.02); opacity: 0.9; }
-    }
-    
-    /* Context Alert Styles */
-    .context-alert {
-        padding: 1rem;
-        margin: 1rem 0;
-        border-radius: 0.5rem;
-        border-left: 4px solid;
-        animation: slideIn 0.5s ease;
-    }
-    
-    .context-alert-warning {
-        background-color: #fff3cd;
-        border-color: #ffc107;
-        color: #856404;
-    }
-    
-    .context-alert-expired {
-        background-color: #f8d7da;
-        border-color: #dc3545;
-        color: #721c24;
-    }
-    
-    .context-alert-reset {
-        background-color: #d1ecf1;
-        border-color: #17a2b8;
-        color: #0c5460;
-    }
-    
-    @keyframes slideIn {
-        from {
-            transform: translateX(-20px);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    /* Progress Bar for Timer */
-    .timer-progress {
-        width: 100%;
-        height: 6px;
-        background-color: rgba(255,255,255,0.3);
-        border-radius: 3px;
-        margin-top: 0.5rem;
-        overflow: hidden;
-    }
-    
-    .timer-progress-bar {
-        height: 100%;
-        background-color: white;
-        transition: width 1s linear;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -159,10 +62,6 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 if 'session_id' not in st.session_state:
     st.session_state.session_id = f"session_{int(time.time())}"
-if 'context_expires_at' not in st.session_state:
-    st.session_state.context_expires_at = None
-if 'context_window_number' not in st.session_state:
-    st.session_state.context_window_number = 0    
 if 'current_provider' not in st.session_state:
     st.session_state.current_provider = None
 if 'available_providers' not in st.session_state:
@@ -174,10 +73,6 @@ if 'user_id' not in st.session_state:
     import socket
     unique_string = f"{time.time()}_{socket.gethostname()}_{id(st.session_state)}"
     st.session_state.user_id = hashlib.md5(unique_string.encode()).hexdigest()[:16]
-if 'last_notification_time' not in st.session_state:
-    st.session_state.last_notification_time = None
-if 'context_was_reset' not in st.session_state:
-    st.session_state.context_was_reset = False
 
 # Helper Functions
 def check_server_health():
@@ -216,38 +111,11 @@ def switch_provider(provider_name):
     except:
         return False
 
-def get_session_info():
-    """Get current session info from backend"""
-    try:
-        response = requests.get(
-            f"{API_BASE_URL}/api/chat/session/{st.session_state.session_id}/info",
-            timeout=5
-        )
-        if response.status_code == 200:
-            return response.json()
-    except:
-        pass
-    return None
-
-def reset_session_context():
-    """Manually reset the context window"""
-    try:
-        response = requests.post(
-            f"{API_BASE_URL}/api/chat/session/{st.session_state.session_id}/reset",
-            timeout=5
-        )
-        if response.status_code == 200:
-            return response.json()
-    except:
-        pass
-    return None
-
 def send_message(message, provider=None):
-    """Send message to chat API with context tracking"""
+    """Send message to chat API"""
     try:
         payload = {
             "message": message,
-            "conversation_history": [],
             "session_id": st.session_state.session_id,
             "provider": provider,
             "user_id": st.session_state.user_id
@@ -260,20 +128,7 @@ def send_message(message, provider=None):
         )
         
         if response.status_code == 200:
-            result = response.json()
-            
-            # Update context info from response
-            if 'context_expires_at' in result:
-                st.session_state.context_expires_at = result['context_expires_at']
-            
-            if 'context_window_number' in result:
-                st.session_state.context_window_number = result['context_window_number']
-            
-            # Store if context was reset
-            if result.get('context_was_reset', False):
-                st.session_state.context_was_reset = True
-            
-            return result
+            return response.json()
         
     except Exception as e:
         st.error(f"Error: {str(e)}")
@@ -299,37 +154,6 @@ def submit_feedback(message_id, feedback_type, comment=None):
     except Exception as e:
         st.error(f"Feedback error: {str(e)}")
     return False
-
-def stream_message(message, provider=None):
-    """Stream message response"""
-    try:
-        payload = {
-            "message": message,
-            "conversation_history": [
-                {"role": msg["role"], "content": msg["content"]}
-                for msg in st.session_state.messages[-10:]
-            ],
-            "session_id": st.session_state.session_id,
-            "provider": provider
-        }
-        
-        response = requests.post(
-            f"{API_BASE_URL}/api/chat/stream",
-            json=payload,
-            stream=True,
-            timeout=120
-        )
-        
-        if response.status_code == 200:
-            for line in response.iter_lines():
-                if line:
-                    line_text = line.decode('utf-8')
-                    if line_text.startswith('data: '):
-                        chunk = line_text[6:]
-                        if chunk != '[DONE]':
-                            yield chunk
-    except Exception as e:
-        yield f"Error: {str(e)}"
 
 def list_documents():
     """List all documents"""
@@ -376,140 +200,38 @@ def clear_chat():
     st.session_state.messages = []
     st.session_state.session_id = f"session_{int(time.time())}"
     st.session_state.feedback_given = {}
-    st.session_state.context_expires_at = None
-    st.session_state.context_window_number = 0
-    st.session_state.context_was_reset = False
-    st.session_state.last_notification_time = None
 
-def get_time_remaining():
-    """
-    Calculate time remaining in context window
-    Returns seconds remaining or None if no active session
-    """
-    if not st.session_state.context_expires_at:
-        return None
-    
+def clear_session_memory():
+    """Clear server-side session memory"""
     try:
-        # Parse the expiry time
-        expiry_str = st.session_state.context_expires_at.replace('Z', '+00:00')
-        expiry = datetime.fromisoformat(expiry_str)
-        
-        # Make timezone-aware if needed
-        if expiry.tzinfo is None:
-            expiry = expiry.replace(tzinfo=timezone.utc)
-        
-        # Get current UTC time
-        now = datetime.now(timezone.utc)
-        
-        if now >= expiry:
-            return 0
-        
-        remaining = (expiry - now).total_seconds()
-        return max(0, remaining)
-    except Exception as e:
-        # Fallback: try to get from backend
-        session_info = get_session_info()
-        if session_info:
-            return session_info.get('time_remaining_seconds', 0)
-        return None
-
-def format_time_remaining(seconds):
-    """Format seconds as MM:SS"""
-    if seconds is None:
-        return "5:00"
-    
-    minutes = int(seconds // 60)
-    secs = int(seconds % 60)
-    return f"{minutes}:{secs:02d}"
-
-def get_timer_progress_percentage(seconds):
-    """Calculate progress bar percentage (5 minutes = 300 seconds)"""
-    if seconds is None:
-        return 100
-    
-    max_time = 300  # 5 minutes in seconds
-    percentage = (seconds / max_time) * 100
-    return max(0, min(100, percentage))
+        response = requests.post(
+            f"{API_BASE_URL}/api/chat/clear/{st.session_state.session_id}",
+            timeout=5
+        )
+        return response.status_code == 200
+    except:
+        return False
 
 # Sidebar
 with st.sidebar:
-    st.markdown("### 🧠 VoxelBox RAG Chatbot")
-    st.markdown("---")
-    
-    st.markdown("### ⏱️ Context Window")
-    
-    # Get time remaining
-    time_remaining = get_time_remaining()
-    
-    if time_remaining is not None:
-        formatted_time = format_time_remaining(time_remaining)
-        progress_percentage = get_timer_progress_percentage(time_remaining)
-        
-        # Choose style based on time remaining
-        if time_remaining <= 0:
-            timer_class = "timer-expired"
-            message = "⚠️ Context Expired"
-            status_emoji = "🔴"
-        elif time_remaining < 60:
-            timer_class = "timer-warning"
-            message = "⚠️ Expiring soon!"
-            status_emoji = "🟡"
-        else:
-            timer_class = ""
-            message = "✅ AI remembers last 5 min"
-            status_emoji = "🟢"
-        
-        # Display timer with progress bar
-        st.markdown(f"""
-        <div class="timer-container {timer_class}">
-            <div class="timer-text">{status_emoji} {formatted_time}</div>
-            <div style="margin: 0.5rem 0;">{message}</div>
-            <div class="timer-progress">
-                <div class="timer-progress-bar" style="width: {progress_percentage}%;"></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if time_remaining > 0:
-            st.caption(f"Context Window #{st.session_state.context_window_number}")
-            
-            # Manual reset button
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("🔄 Reset", use_container_width=True, help="Clear context now"):
-                    result = reset_session_context()
-                    if result:
-                        st.session_state.context_expires_at = result['new_expiry']
-                        st.session_state.context_was_reset = True
-                        st.success("✅ Context reset!")
-                        time.sleep(1)
-                        st.rerun()
-            
-            with col2:
-                if st.button("ℹ️ Info", use_container_width=True, help="Session details"):
-                    session_info = get_session_info()
-                    if session_info:
-                        st.json(session_info)
-    else:
-        st.info("⏱️ 5:00 - Start chatting to begin context")
-    
+    st.markdown("### VoxelBox RAG Chatbot")
     st.markdown("---")
     
     # Server Status
     server_healthy = check_server_health()
     if server_healthy:
-        st.success("✅ Server Online")
+        st.success("Server Online")
     else:
-        st.error("❌ Server Offline")
+        st.error("Server Offline")
         st.stop()
     
     # Get configuration
     config = get_config()
     if config:
-        st.info(f"📦 Version: {config['app']['version']}")
+        st.info(f"Version: {config['app']['version']}")
     
     # Provider Selection
-    st.markdown("### 🤖 LLM Provider")
+    st.markdown("### LLM Provider")
     providers = get_providers()
     if providers:
         st.session_state.available_providers = providers
@@ -537,67 +259,46 @@ with st.sidebar:
     st.markdown("---")
     
     # Session Info
-    st.markdown("### 💬 Chat Session")
+    st.markdown("### Chat Session")
     st.text(f"ID: {st.session_state.session_id[:12]}...")
     st.text(f"User: {st.session_state.user_id[:8]}...")
     st.text(f"Messages: {len(st.session_state.messages)}")
     
-    if st.button("🆕 New Chat", use_container_width=True):
-        clear_chat()
-        st.rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("New Chat", use_container_width=True):
+            clear_chat()
+            st.rerun()
+    
+    with col2:
+        if st.button("Clear Memory", use_container_width=True):
+            if clear_session_memory():
+                st.success("Memory cleared")
+            else:
+                st.error("Failed to clear")
     
     st.markdown("---")
     
     # Document Stats
     docs = list_documents()
-    st.markdown("### 📚 Knowledge Base")
+    st.markdown("### Knowledge Base")
     st.metric("Documents", len(docs))
     
-    if st.button("♻️ Refresh KB", use_container_width=True):
+    if st.button("Refresh KB", use_container_width=True):
         with st.spinner("Refreshing..."):
             result = refresh_knowledge_base()
             if result:
-                st.success(f"✅ {result['documents']} docs, {result['chunks']} chunks")
+                st.success(f"Done: {result['documents']} docs, {result['chunks']} chunks")
                 st.rerun()
 
 # Main Content Tabs
-tab1, tab2, tab3 = st.tabs(["💬 Chat", "📄 Documents", "⚙️ Settings"])
+tab1, tab2, tab3 = st.tabs(["Chat", "Documents", "Settings"])
 
 # TAB 1: Chat Interface
 with tab1:
     st.markdown('<div class="main-header">VoxelBox Explore Assistant</div>', unsafe_allow_html=True)
     
-    # Show context notifications
-    time_remaining = get_time_remaining()
-    
-    # Show context reset notification
-    if st.session_state.context_was_reset:
-        st.markdown("""
-        <div class="context-alert context-alert-reset">
-            <strong>🔄 Context Reset</strong><br>
-            The AI's memory has been cleared. This is a fresh conversation.
-        </div>
-        """, unsafe_allow_html=True)
-        st.session_state.context_was_reset = False
-    
-    # Show expiration warnings
-    if time_remaining is not None:
-        if time_remaining == 0:
-            st.markdown("""
-            <div class="context-alert context-alert-expired">
-                <strong>⏰ Context Expired!</strong><br>
-                The 5-minute window has ended. The AI will not remember previous messages.
-                Your next message will start a new conversation.
-            </div>
-            """, unsafe_allow_html=True)
-        elif time_remaining <= 60 and time_remaining > 0:
-            st.markdown(f"""
-            <div class="context-alert context-alert-warning">
-                <strong>⚠️ Context Expiring Soon!</strong><br>
-                Only <strong>{int(time_remaining)}</strong> seconds remaining. 
-                The AI will forget this conversation after the timer expires.
-            </div>
-            """, unsafe_allow_html=True)
+    st.info("Conversation memory: Last 5 exchanges (10 messages)")
     
     # Chat container
     chat_container = st.container()
@@ -612,14 +313,14 @@ with tab1:
             if role == "user":
                 st.markdown(f"""
                 <div class="chat-message user-message">
-                    <strong style="color: #1565c0;">👤 You</strong>
+                    <strong style="color: #1565c0;">You</strong>
                     <div class="message-content">{content}</div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown(f"""
                 <div class="chat-message assistant-message">
-                    <strong style="color: #2e7d32;">🤖 Assistant</strong>
+                    <strong style="color: #2e7d32;">Assistant</strong>
                     <div class="message-content">{content}</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -643,7 +344,7 @@ with tab1:
                                 st.rerun()
                     
                     with col3:
-                        if st.button("💬 Comment", key=f"comment_{message_id}"):
+                        if st.button("Comment", key=f"comment_{message_id}"):
                             st.session_state[f"show_comment_{message_id}"] = True
                     
                     # Show comment box if requested
@@ -679,11 +380,11 @@ with tab1:
                 
                 # Show sources if available
                 if "sources" in message and message["sources"]:
-                    with st.expander("📚 Sources Used"):
+                    with st.expander("Sources Used"):
                         for src in message["sources"]:
                             st.markdown(f"""
                             <div class="source-box">
-                                <strong>📄 {src['title']}</strong><br>
+                                <strong>{src['title']}</strong><br>
                                 {src['content']}
                             </div>
                             """, unsafe_allow_html=True)
@@ -700,22 +401,15 @@ with tab1:
     # Chat input
     st.markdown("---")
     
-    # Use a form to prevent auto-submission
     with st.form(key="chat_form", clear_on_submit=True):
-        col1, col2 = st.columns([6, 1])
+        user_input = st.text_input(
+            "Ask a question...",
+            placeholder="e.g., What is VoxelBox Explore?",
+            key="chat_input",
+            label_visibility="collapsed"
+        )
         
-        with col1:
-            user_input = st.text_input(
-                "Ask a question...",
-                placeholder="e.g., What is VoxelBox Explore?",
-                key="chat_input",
-                label_visibility="collapsed"
-            )
-        
-        with col2:
-            use_streaming = st.checkbox("Stream", value=False)
-        
-        submit_button = st.form_submit_button("📤 Send", use_container_width=True, type="primary")
+        submit_button = st.form_submit_button("Send", use_container_width=True, type="primary")
     
     if submit_button and user_input:
         if user_input.strip():
@@ -726,44 +420,24 @@ with tab1:
             })
             
             # Get response
-            if use_streaming:
-                # Streaming response
-                with st.spinner("Thinking..."):
-                    response_placeholder = st.empty()
-                    full_response = ""
-                    
-                    for chunk in stream_message(user_input, st.session_state.current_provider):
-                        full_response += chunk
-                        response_placeholder.markdown(f"🤖 {full_response}▌")
-                    
-                    response_placeholder.markdown(f"🤖 {full_response}")
-                    
+            with st.spinner("Getting response..."):
+                result = send_message(user_input, st.session_state.current_provider)
+                
+                if result:
                     st.session_state.messages.append({
                         "role": "assistant",
-                        "content": full_response,
-                        "provider": st.session_state.current_provider or "unknown"
+                        "content": result["response"],
+                        "sources": result.get("sources", []),
+                        "provider": result.get("provider_used", "unknown"),
+                        "tokens": result.get("tokens_used"),
+                        "message_id": result.get("message_id")
                     })
-                    st.warning("⚠️ Feedback not available for streaming responses")
-            else:
-                # Standard response with feedback support
-                with st.spinner("Getting response..."):
-                    result = send_message(user_input, st.session_state.current_provider)
-                    
-                    if result:
-                        st.session_state.messages.append({
-                            "role": "assistant",
-                            "content": result["response"],
-                            "sources": result.get("sources", []),
-                            "provider": result.get("provider_used", "unknown"),
-                            "tokens": result.get("tokens_used"),
-                            "message_id": result.get("message_id")
-                        })
             
             st.rerun()
 
 # TAB 2: Document Management
 with tab2:
-    st.markdown("## 📄 Document Management")
+    st.markdown("## Document Management")
     
     col1, col2 = st.columns([2, 1])
     
@@ -777,29 +451,29 @@ with tab2:
         )
         
         if uploaded_files:
-            if st.button("⬆️ Upload All", type="primary"):
+            if st.button("Upload All", type="primary"):
                 progress_bar = st.progress(0)
                 for idx, file in enumerate(uploaded_files):
                     with st.spinner(f"Uploading {file.name}..."):
                         result = upload_document(file)
                         if result:
-                            st.success(f"✅ {file.name} - {result['chunks']} chunks")
+                            st.success(f"Done: {file.name} - {result['chunks']} chunks")
                         else:
-                            st.error(f"❌ Failed to upload {file.name}")
+                            st.error(f"Failed: {file.name}")
                     progress_bar.progress((idx + 1) / len(uploaded_files))
                 st.rerun()
     
     with col2:
         st.markdown("### Quick Actions")
-        if st.button("♻️ Refresh Knowledge Base", use_container_width=True):
+        if st.button("Refresh Knowledge Base", use_container_width=True):
             with st.spinner("Refreshing..."):
                 result = refresh_knowledge_base()
                 if result:
-                    st.success(f"✅ Done!\n\nDocs: {result['documents']}\nChunks: {result['chunks']}")
+                    st.success(f"Done!\n\nDocs: {result['documents']}\nChunks: {result['chunks']}")
                     st.rerun()
     
     st.markdown("---")
-    st.markdown("### 📚 Current Documents")
+    st.markdown("### Current Documents")
     
     docs = list_documents()
     
@@ -810,28 +484,28 @@ with tab2:
             col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
             
             with col1:
-                st.markdown(f"**📄 {doc['name']}**")
+                st.markdown(f"**{doc['name']}**")
             with col2:
                 size_mb = doc['size'] / (1024 * 1024)
                 st.text(f"{size_mb:.2f} MB")
             with col3:
                 st.text(doc['type'])
             with col4:
-                if st.button("🗑️", key=f"delete_{doc['name']}"):
+                if st.button("Delete", key=f"delete_{doc['name']}"):
                     if delete_document(doc['name']):
                         st.success(f"Deleted {doc['name']}")
                         st.rerun()
                     else:
                         st.error("Delete failed")
 
-# TAB 3: Settings & Configuration
+# TAB 3: Settings
 with tab3:
-    st.markdown("## ⚙️ Settings & Configuration")
+    st.markdown("## Settings & Configuration")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("### 🤖 LLM Providers")
+        st.markdown("### LLM Providers")
         providers = get_providers()
         
         if providers:
@@ -849,7 +523,7 @@ with tab3:
             st.warning("No providers available")
     
     with col2:
-        st.markdown("### 📊 System Status")
+        st.markdown("### System Status")
         
         config = get_config()
         if config:
@@ -861,9 +535,9 @@ with tab3:
             st.markdown(f"**Vector DB:** {config['vector_db']['type']}")
         
         st.markdown("---")
-        st.markdown("### 🏥 Health Check")
+        st.markdown("### Health Check")
         
-        if st.button("🔍 Check Health", use_container_width=True):
+        if st.button("Check Health", use_container_width=True):
             try:
                 response = requests.get(f"{API_BASE_URL}/api/health/")
                 if response.status_code == 200:
@@ -873,38 +547,6 @@ with tab3:
                     st.error("Health check failed")
             except:
                 st.error("Cannot reach server")
-    
-    st.markdown("---")
-    st.markdown("### 📝 System Prompt")
-    
-    if st.button("👁️ View System Prompt"):
-        try:
-            response = requests.get(f"{API_BASE_URL}/api/config/system-prompt")
-            if response.status_code == 200:
-                prompt = response.json()
-                st.text_area("System Prompt", prompt['system_prompt'], height=300)
-        except:
-            st.error("Failed to fetch system prompt")
-    
-    st.markdown("---")
-    st.markdown("### ⏱️ Context Management Settings")
-    
-    st.info("**Current Settings:**")
-    st.markdown("- **Context Duration:** 5 minutes")
-    st.markdown("- **Auto-refresh:** Every 5 seconds")
-    st.markdown("- **Conversation Memory:** Last 6 messages")
-    
-    if st.button("📊 View Context Stats", use_container_width=True):
-        try:
-            response = requests.get(f"{API_BASE_URL}/api/chat/stats")
-            if response.status_code == 200:
-                stats = response.json()
-                st.success("**Context Statistics:**")
-                st.json(stats)
-            else:
-                st.warning("Stats endpoint not available")
-        except:
-            st.warning("Could not fetch statistics")
 
 # Footer
 st.markdown("---")
@@ -913,16 +555,3 @@ st.markdown("""
         <small>VoxelBox Explore Assistant | Powered by RAG & Multi-Model LLM</small>
     </div>
 """, unsafe_allow_html=True)
-
-# Auto-refresh for live timer updates (refresh every 5 seconds)
-if time_remaining is not None and time_remaining > 0:
-    # Use Streamlit's built-in rerun after delay
-    def delayed_rerun():
-        time.sleep(5)  # Wait 5 seconds
-        st.rerun()
-    
-    # Start background timer (only if not already running)
-    if 'timer_thread' not in st.session_state or not st.session_state.timer_thread.is_alive():
-        timer_thread = threading.Thread(target=delayed_rerun, daemon=True)
-        st.session_state.timer_thread = timer_thread
-        timer_thread.start()
