@@ -5549,3 +5549,27 @@
 2026-02-11 22:11:08,317 - pingus - INFO - ============================================================
 2026-02-12 06:48:53,893 - pingus - INFO - Shutting down application...
 2026-02-12 06:48:59,402 - pingus - INFO -  Redis connection closed
+2026-02-24 19:38:59,362 - app - INFO - CORS enabled for all origins
+2026-02-24 19:38:59,384 - app - INFO - ============================================================
+2026-02-24 19:38:59,389 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-02-24 19:38:59,390 - app - INFO - Environment: production
+2026-02-24 19:38:59,393 - app - INFO - ============================================================
+2026-02-24 19:38:59,419 - app - INFO - Database initialized
+2026-02-24 19:38:59,420 - app - INFO - Initializing vector store...
+2026-02-24 19:39:14,351 - app - INFO - Vector store ready with 342 documents
+2026-02-24 19:39:15,135 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-02-24 19:39:15,136 - app - INFO - Default provider: openai
+2026-02-24 19:39:15,137 - app - INFO - Startup complete
+2026-02-24 19:39:15,138 - app - INFO - ============================================================
+2026-02-24 21:25:53,464 - app - INFO - CORS enabled for all origins
+2026-02-24 21:25:53,472 - app - INFO - ============================================================
+2026-02-24 21:25:53,473 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-02-24 21:25:53,474 - app - INFO - Environment: production
+2026-02-24 21:25:53,474 - app - INFO - ============================================================
+2026-02-24 21:25:53,486 - app - INFO - Database initialized
+2026-02-24 21:25:53,487 - app - INFO - Initializing vector store...
+2026-02-24 21:26:00,757 - app - INFO - Vector store ready with 342 documents
+2026-02-24 21:26:01,653 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-02-24 21:26:01,660 - app - INFO - Default provider: openai
+2026-02-24 21:26:01,662 - app - INFO - Startup complete
+2026-02-24 21:26:01,668 - app - INFO - ============================================================

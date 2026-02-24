@@ -15,7 +15,26 @@ from llm.factory import get_llm_factory
 from llm.base import Message
 from vector_db.retriever import DocumentRetriever
 from config import get_config, get_conversation_memory_config
-from langchain.memory import ConversationBufferWindowMemory
+from langchain_core.chat_history import InMemoryChatMessageHistory
+
+# ── Drop-in replacement for ConversationBufferWindowMemory ──────────────────
+class ConversationBufferWindowMemory:
+    def __init__(self, k=5, return_messages=True, memory_key="history"):
+        self.k = k
+        self.return_messages = return_messages
+        self.memory_key = memory_key
+        self.history = InMemoryChatMessageHistory()
+
+    def save_context(self, inputs, outputs):
+        self.history.add_user_message(inputs["input"])
+        self.history.add_ai_message(outputs["output"])
+
+    def load_memory_variables(self, _):
+        return {self.memory_key: self.history.messages[-(self.k * 2):]}
+
+    def clear(self):
+        self.history.clear()
+# ────────────────────────────────────────────────────────────────────────────
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
