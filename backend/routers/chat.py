@@ -214,8 +214,12 @@ Please answer based on the context above."""
             if token_check['exceeds_limit']:
                 logger.warning(f"Token limit exceeded: {token_check['token_count']} > {buffer_config.max_tokens}")
                 # Trim oldest messages
-                messages = messages[-(buffer_config.k * 2 + 1):]
-                logger.info(f"Trimmed to {len(messages)} messages")
+                while len(messages) > 2:
+                    messages = messages[2:]  # Remove oldest Q&A pair
+                    new_check = check_token_limit(messages, buffer_config.max_tokens, token_config.warning_threshold)
+                    if not new_check['exceeds_limit']:
+                        break
+                logger.info(f"Trimmed to {len(messages)} messages, tokens now: {count_tokens_in_messages(messages)}")
             
             elif token_check['warning']:
                 logger.warning(f"Approaching token limit: {token_check['percentage']:.1f}%")

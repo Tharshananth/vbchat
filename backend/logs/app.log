@@ -5573,3 +5573,274 @@
 2026-02-24 21:26:01,660 - app - INFO - Default provider: openai
 2026-02-24 21:26:01,662 - app - INFO - Startup complete
 2026-02-24 21:26:01,668 - app - INFO - ============================================================
+2026-02-25 11:24:00,163 - app - INFO - CORS enabled for all origins
+2026-02-25 11:24:00,191 - app - INFO - ============================================================
+2026-02-25 11:24:00,191 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-02-25 11:24:00,192 - app - INFO - Environment: production
+2026-02-25 11:24:00,192 - app - INFO - ============================================================
+2026-02-25 11:24:00,215 - app - INFO - Database initialized
+2026-02-25 11:24:00,219 - app - INFO - Initializing vector store...
+2026-02-25 11:24:07,058 - app - INFO - Vector store ready with 342 documents
+2026-02-25 11:24:07,059 - app - INFO - Available LLM providers: None
+2026-02-25 11:24:07,060 - app - INFO - Default provider: openai
+2026-02-25 11:24:07,060 - app - INFO - Startup complete
+2026-02-25 11:24:07,061 - app - INFO - ============================================================
+2026-02-25 11:24:44,589 - app - INFO - Shutting down application...
+2026-02-25 11:25:25,192 - app - INFO - CORS enabled for all origins
+2026-02-25 11:25:25,207 - app - INFO - ============================================================
+2026-02-25 11:25:25,208 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-02-25 11:25:25,209 - app - INFO - Environment: production
+2026-02-25 11:25:25,209 - app - INFO - ============================================================
+2026-02-25 11:25:25,223 - app - INFO - Database initialized
+2026-02-25 11:25:25,224 - app - INFO - Initializing vector store...
+2026-02-25 11:25:32,184 - app - INFO - Vector store ready with 342 documents
+2026-02-25 11:25:33,723 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-02-25 11:25:33,724 - app - INFO - Default provider: openai
+2026-02-25 11:25:33,725 - app - INFO - Startup complete
+2026-02-25 11:25:33,726 - app - INFO - ============================================================
+2026-02-25 11:32:02,621 - app - INFO - OPTIONS /api/chat/
+2026-02-25 11:32:02,652 - app - INFO - Response: 200
+2026-02-25 11:32:02,673 - app - INFO - POST /api/chat/
+2026-02-25 11:32:09,088 - app - INFO - Response: 200
+2026-02-25 11:51:52,529 - app - INFO - OPTIONS /api/chat/
+2026-02-25 11:51:52,585 - app - INFO - Response: 200
+2026-02-25 11:51:52,604 - app - INFO - POST /api/chat/
+2026-02-25 11:51:59,851 - app - INFO - Response: 200
+2026-02-25 21:31:44,007 - app - INFO - Shutting down application...
+2026-02-25 21:35:50,955 - app - INFO - CORS enabled for all origins
+2026-02-25 21:35:51,016 - app - INFO - ============================================================
+2026-02-25 21:35:51,018 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-02-25 21:35:51,020 - app - INFO - Environment: production
+2026-02-25 21:35:51,023 - app - INFO - ============================================================
+2026-02-25 21:35:51,051 - app - INFO - Database initialized
+2026-02-25 21:35:51,053 - app - INFO - Initializing vector store...
+2026-02-25 21:36:02,589 - app - INFO - Vector store ready with 342 documents
+2026-02-25 21:36:06,763 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-02-25 21:36:06,774 - app - INFO - Default provider: openai
+2026-02-25 21:36:06,777 - app - INFO - Startup complete
+2026-02-25 21:36:06,782 - app - INFO - ============================================================
+2026-02-25 21:53:14,627 - app - INFO - GET /
+2026-02-25 21:53:14,708 - app - INFO - Response: 200
+2026-02-25 21:53:15,122 - app - INFO - GET /favicon.ico
+2026-02-25 21:53:15,148 - app - INFO - Response: 404
+2026-02-25 21:53:20,997 - app - INFO - GET /docs
+2026-02-25 21:53:21,014 - app - INFO - Response: 200
+2026-02-25 21:53:21,839 - app - INFO - GET /openapi.json
+2026-02-25 21:53:22,427 - app - INFO - Response: 200
+2026-02-25 21:54:30,877 - app - INFO - GET /health
+2026-02-25 21:54:30,939 - app - INFO - Response: 200
+2026-02-25 21:54:33,000 - app - INFO - POST /api/chat/
+2026-02-25 21:54:46,566 - app - INFO - Response: 200
+2026-02-25 21:54:49,663 - app - INFO - POST /api/chat/
+2026-02-25 21:54:52,138 - app - INFO - Response: 200
+2026-02-25 21:54:55,196 - app - INFO - GET /api/chat/memory/info/context_test_1772036667
+2026-02-25 21:54:55,209 - app - INFO - Response: 200
+2026-02-25 21:54:57,296 - app - INFO - POST /api/chat/
+2026-02-25 21:55:00,336 - app - INFO - Response: 200
+2026-02-25 21:55:03,410 - app - INFO - POST /api/chat/
+2026-02-25 21:55:11,394 - app - INFO - Response: 200
+2026-02-25 21:55:14,473 - app - INFO - POST /api/chat/
+2026-02-25 21:55:19,892 - app - INFO - Response: 200
+2026-02-25 21:55:22,984 - app - INFO - GET /api/chat/memory/info/context_test_1772036667
+2026-02-25 21:55:23,059 - app - INFO - Response: 200
+2026-02-25 21:55:25,197 - app - INFO - GET /api/chat/memory/info/context_test_1772036667
+2026-02-25 21:55:25,204 - app - INFO - Response: 200
+2026-02-25 21:55:27,260 - app - INFO - POST /api/chat/
+2026-02-25 21:55:32,801 - app - INFO - Response: 200
+2026-02-25 21:55:35,890 - app - INFO - POST /api/chat/
+2026-02-25 21:55:43,141 - app - INFO - Response: 200
+2026-02-25 21:55:45,714 - app - INFO - POST /api/chat/
+2026-02-25 21:55:54,216 - app - INFO - Response: 200
+2026-02-25 21:55:56,798 - app - INFO - POST /api/chat/
+2026-02-25 21:56:03,216 - app - INFO - Response: 200
+2026-02-25 21:56:05,823 - app - INFO - POST /api/chat/
+2026-02-25 21:56:16,141 - app - INFO - Response: 200
+2026-02-25 21:56:18,733 - app - INFO - POST /api/chat/
+2026-02-25 21:56:24,008 - app - INFO - Response: 200
+2026-02-25 21:56:26,590 - app - INFO - POST /api/chat/
+2026-02-25 21:56:32,497 - app - INFO - Response: 200
+2026-02-25 21:56:35,097 - app - INFO - POST /api/chat/
+2026-02-25 21:56:43,261 - app - INFO - Response: 200
+2026-02-25 21:56:45,865 - app - INFO - POST /api/chat/
+2026-02-25 21:56:50,313 - app - INFO - Response: 200
+2026-02-25 21:56:52,908 - app - INFO - POST /api/chat/
+2026-02-25 21:56:57,484 - app - INFO - Response: 200
+2026-02-25 21:57:00,073 - app - INFO - POST /api/chat/
+2026-02-25 21:57:09,417 - app - INFO - Response: 200
+2026-02-25 21:57:12,036 - app - INFO - POST /api/chat/
+2026-02-25 21:57:15,543 - app - INFO - Response: 200
+2026-02-25 21:57:18,650 - app - INFO - GET /api/chat/memory/info/context_test_1772036667
+2026-02-25 21:57:18,656 - app - INFO - Response: 200
+2026-02-25 21:57:20,712 - app - INFO - POST /api/chat/
+2026-02-25 21:57:30,351 - app - INFO - Response: 200
+2026-02-25 21:57:33,448 - app - INFO - GET /api/chat/memory/info/context_test_1772036667
+2026-02-25 21:57:33,454 - app - INFO - Response: 200
+2026-02-25 21:57:35,492 - app - INFO - GET /api/chat/memory/info/context_test_1772036667
+2026-02-25 21:57:35,497 - app - INFO - Response: 200
+2026-02-25 21:57:37,551 - app - INFO - POST /api/chat/
+2026-02-25 21:57:40,398 - app - INFO - Response: 200
+2026-02-25 21:57:42,449 - app - INFO - POST /api/chat/
+2026-02-25 21:57:45,780 - app - INFO - Response: 200
+2026-02-25 21:57:47,849 - app - INFO - POST /api/chat/
+2026-02-25 21:57:49,406 - app - INFO - Response: 200
+2026-02-25 21:57:51,460 - app - INFO - POST /api/chat/
+2026-02-25 21:57:53,513 - app - INFO - Response: 200
+2026-02-25 22:56:19,134 - app - INFO - Shutting down application...
+2026-02-25 22:57:50,690 - app - INFO - CORS enabled for all origins
+2026-02-25 22:57:50,707 - app - INFO - ============================================================
+2026-02-25 22:57:50,708 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-02-25 22:57:50,708 - app - INFO - Environment: production
+2026-02-25 22:57:50,709 - app - INFO - ============================================================
+2026-02-25 22:57:50,739 - app - INFO - Database initialized
+2026-02-25 22:57:50,743 - app - INFO - Initializing vector store...
+2026-02-25 22:57:58,810 - app - INFO - Vector store ready with 342 documents
+2026-02-25 22:57:59,693 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-02-25 22:57:59,694 - app - INFO - Default provider: openai
+2026-02-25 22:57:59,695 - app - INFO - Startup complete
+2026-02-25 22:57:59,697 - app - INFO - ============================================================
+2026-02-25 22:58:22,893 - app - INFO - CORS enabled for all origins
+2026-02-25 22:58:22,913 - app - INFO - ============================================================
+2026-02-25 22:58:22,914 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-02-25 22:58:22,915 - app - INFO - Environment: production
+2026-02-25 22:58:22,918 - app - INFO - ============================================================
+2026-02-25 22:58:22,934 - app - INFO - Database initialized
+2026-02-25 22:58:22,935 - app - INFO - Initializing vector store...
+2026-02-25 22:58:28,418 - app - INFO - Vector store ready with 342 documents
+2026-02-25 22:58:29,166 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-02-25 22:58:29,171 - app - INFO - Default provider: openai
+2026-02-25 22:58:29,179 - app - INFO - Startup complete
+2026-02-25 22:58:29,184 - app - INFO - ============================================================
+2026-02-25 23:07:13,111 - app - INFO - OPTIONS /api/chat/
+2026-02-25 23:07:13,128 - app - INFO - Response: 200
+2026-02-25 23:07:13,135 - app - INFO - POST /api/chat/
+2026-02-25 23:07:18,467 - app - INFO - Response: 200
+2026-02-25 23:07:59,529 - app - INFO - GET /health
+2026-02-25 23:07:59,575 - app - INFO - Response: 200
+2026-02-25 23:08:01,658 - app - INFO - POST /api/chat/
+2026-02-25 23:08:06,330 - app - INFO - Response: 200
+2026-02-25 23:08:09,417 - app - INFO - POST /api/chat/
+2026-02-25 23:08:11,526 - app - INFO - Response: 200
+2026-02-25 23:08:14,625 - app - INFO - GET /api/chat/memory/info/context_test_1772041077
+2026-02-25 23:08:14,632 - app - INFO - Response: 200
+2026-02-25 23:08:16,729 - app - INFO - POST /api/chat/
+2026-02-25 23:08:18,784 - app - INFO - Response: 200
+2026-02-25 23:08:21,873 - app - INFO - POST /api/chat/
+2026-02-25 23:08:28,909 - app - INFO - Response: 200
+2026-02-25 23:08:32,130 - app - INFO - POST /api/chat/
+2026-02-25 23:08:33,800 - app - INFO - Response: 200
+2026-02-25 23:08:36,876 - app - INFO - GET /api/chat/memory/info/context_test_1772041077
+2026-02-25 23:08:36,878 - app - INFO - Response: 200
+2026-02-25 23:08:39,741 - app - INFO - GET /api/chat/memory/info/context_test_1772041077
+2026-02-25 23:08:39,746 - app - INFO - Response: 200
+2026-02-25 23:08:41,839 - app - INFO - POST /api/chat/
+2026-02-25 23:08:44,043 - app - INFO - Response: 200
+2026-02-25 23:09:05,989 - app - INFO - POST /api/chat/
+2026-02-25 23:09:09,584 - app - INFO - Response: 200
+2026-02-25 23:09:12,123 - app - INFO - POST /api/chat/
+2026-02-25 23:09:16,241 - app - INFO - Response: 200
+2026-02-25 23:09:18,839 - app - INFO - POST /api/chat/
+2026-02-25 23:09:22,879 - app - INFO - Response: 200
+2026-02-25 23:09:25,471 - app - INFO - POST /api/chat/
+2026-02-25 23:09:30,357 - app - INFO - Response: 200
+2026-02-25 23:09:32,939 - app - INFO - POST /api/chat/
+2026-02-25 23:09:36,585 - app - INFO - Response: 200
+2026-02-25 23:09:39,196 - app - INFO - POST /api/chat/
+2026-02-25 23:09:43,870 - app - INFO - Response: 200
+2026-02-25 23:09:46,465 - app - INFO - POST /api/chat/
+2026-02-25 23:09:50,248 - app - INFO - Response: 200
+2026-02-25 23:09:52,819 - app - INFO - POST /api/chat/
+2026-02-25 23:09:58,238 - app - INFO - Response: 200
+2026-02-25 23:10:00,818 - app - INFO - POST /api/chat/
+2026-02-25 23:10:05,330 - app - INFO - Response: 200
+2026-02-25 23:10:07,939 - app - INFO - POST /api/chat/
+2026-02-25 23:10:18,066 - app - INFO - Response: 200
+2026-02-25 23:10:20,665 - app - INFO - POST /api/chat/
+2026-02-25 23:10:22,710 - app - INFO - Response: 200
+2026-02-25 23:10:25,788 - app - INFO - GET /api/chat/memory/info/context_test_1772041077
+2026-02-25 23:10:25,793 - app - INFO - Response: 200
+2026-02-25 23:10:27,888 - app - INFO - POST /api/chat/
+2026-02-25 23:10:40,721 - app - INFO - Response: 200
+2026-02-25 23:10:43,794 - app - INFO - GET /api/chat/memory/info/context_test_1772041077
+2026-02-25 23:10:43,798 - app - INFO - Response: 200
+2026-02-25 23:10:47,320 - app - INFO - GET /api/chat/memory/info/context_test_1772041077
+2026-02-25 23:10:47,392 - app - INFO - Response: 200
+2026-02-25 23:10:49,481 - app - INFO - POST /api/chat/
+2026-02-25 23:10:51,150 - app - INFO - Response: 200
+2026-02-25 23:10:53,226 - app - INFO - POST /api/chat/
+2026-02-25 23:10:55,557 - app - INFO - Response: 200
+2026-02-25 23:10:57,641 - app - INFO - POST /api/chat/
+2026-02-25 23:10:59,927 - app - INFO - Response: 200
+2026-02-25 23:11:02,008 - app - INFO - POST /api/chat/
+2026-02-25 23:11:03,130 - app - INFO - Response: 200
+2026-02-26 00:16:34,827 - app - INFO - Shutting down application...
+2026-02-26 14:32:40,685 - app - INFO - CORS enabled for all origins
+2026-02-26 14:32:40,700 - app - INFO - ============================================================
+2026-02-26 14:32:40,701 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-02-26 14:32:40,701 - app - INFO - Environment: production
+2026-02-26 14:32:40,703 - app - INFO - ============================================================
+2026-02-26 14:32:40,715 - app - INFO - Database initialized
+2026-02-26 14:32:40,716 - app - INFO - Initializing vector store...
+2026-02-26 14:32:48,093 - app - INFO - Vector store ready with 342 documents
+2026-02-26 14:32:49,105 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-02-26 14:32:49,106 - app - INFO - Default provider: gemini
+2026-02-26 14:32:49,106 - app - INFO - Startup complete
+2026-02-26 14:32:49,107 - app - INFO - ============================================================
+2026-02-26 14:34:00,880 - app - INFO - GET /health
+2026-02-26 14:34:00,898 - app - INFO - Response: 200
+2026-02-26 14:34:02,964 - app - INFO - POST /api/chat/
+2026-02-26 14:34:06,893 - app - INFO - Response: 200
+2026-02-26 14:34:09,986 - app - INFO - POST /api/chat/
+2026-02-26 14:34:11,509 - app - INFO - Response: 200
+2026-02-26 14:34:14,612 - app - INFO - GET /api/chat/memory/info/context_test_1772096638
+2026-02-26 14:34:14,614 - app - INFO - Response: 200
+2026-02-26 14:34:16,685 - app - INFO - POST /api/chat/
+2026-02-26 14:34:27,688 - app - INFO - Response: 200
+2026-02-26 14:34:30,791 - app - INFO - POST /api/chat/
+2026-02-26 14:34:39,537 - app - INFO - Response: 200
+2026-02-26 14:34:42,613 - app - INFO - POST /api/chat/
+2026-02-26 14:34:44,064 - app - INFO - Response: 200
+2026-02-26 14:34:47,146 - app - INFO - GET /api/chat/memory/info/context_test_1772096638
+2026-02-26 14:34:47,151 - app - INFO - Response: 200
+2026-02-26 14:34:49,219 - app - INFO - GET /api/chat/memory/info/context_test_1772096638
+2026-02-26 14:34:49,221 - app - INFO - Response: 200
+2026-02-26 14:34:51,291 - app - INFO - POST /api/chat/
+2026-02-26 14:34:53,637 - app - INFO - Response: 200
+2026-02-26 14:34:56,713 - app - INFO - POST /api/chat/
+2026-02-26 14:35:00,709 - app - INFO - Response: 200
+2026-02-26 14:35:03,316 - app - INFO - POST /api/chat/
+2026-02-26 14:35:08,883 - app - INFO - Response: 200
+2026-02-26 14:35:11,474 - app - INFO - POST /api/chat/
+2026-02-26 14:35:20,217 - app - INFO - Response: 200
+2026-02-26 14:35:22,842 - app - INFO - POST /api/chat/
+2026-02-26 14:35:35,947 - app - INFO - Response: 200
+2026-02-26 14:35:38,535 - app - INFO - POST /api/chat/
+2026-02-26 14:35:43,175 - app - INFO - Response: 200
+2026-02-26 14:35:45,796 - app - INFO - POST /api/chat/
+2026-02-26 14:35:52,165 - app - INFO - Response: 200
+2026-02-26 14:35:54,775 - app - INFO - POST /api/chat/
+2026-02-26 14:36:02,329 - app - INFO - Response: 200
+2026-02-26 14:36:04,927 - app - INFO - POST /api/chat/
+2026-02-26 14:36:12,457 - app - INFO - Response: 200
+2026-02-26 14:36:15,029 - app - INFO - POST /api/chat/
+2026-02-26 14:36:22,345 - app - INFO - Response: 200
+2026-02-26 14:36:24,922 - app - INFO - POST /api/chat/
+2026-02-26 14:36:32,223 - app - INFO - Response: 200
+2026-02-26 14:36:34,824 - app - INFO - POST /api/chat/
+2026-02-26 14:36:36,458 - app - INFO - Response: 200
+2026-02-26 14:36:39,530 - app - INFO - GET /api/chat/memory/info/context_test_1772096638
+2026-02-26 14:36:39,533 - app - INFO - Response: 200
+2026-02-26 14:36:41,598 - app - INFO - POST /api/chat/
+2026-02-26 14:36:50,888 - app - INFO - Response: 200
+2026-02-26 14:36:54,006 - app - INFO - GET /api/chat/memory/info/context_test_1772096638
+2026-02-26 14:36:54,010 - app - INFO - Response: 200
+2026-02-26 14:36:56,064 - app - INFO - GET /api/chat/memory/info/context_test_1772096638
+2026-02-26 14:36:56,080 - app - INFO - Response: 200
+2026-02-26 14:36:58,162 - app - INFO - POST /api/chat/
+2026-02-26 14:37:00,586 - app - INFO - Response: 200
+2026-02-26 14:37:02,647 - app - INFO - POST /api/chat/
+2026-02-26 14:37:04,987 - app - INFO - Response: 200
+2026-02-26 14:37:07,068 - app - INFO - POST /api/chat/
+2026-02-26 14:37:08,253 - app - INFO - Response: 200
+2026-02-26 14:37:10,330 - app - INFO - POST /api/chat/
+2026-02-26 14:37:11,482 - app - INFO - Response: 200
+2026-02-26 21:36:27,477 - app - INFO - Shutting down application...
