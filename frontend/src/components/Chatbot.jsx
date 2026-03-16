@@ -14,6 +14,8 @@ const Chatbot = () => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [feedbackModal, setFeedbackModal] = useState(null);
+  const [feedbackText, setFeedbackText] = useState('');
   const messagesEndRef = useRef(null);
 
   const API_BASE_URL = "http://localhost:8000";
@@ -109,6 +111,35 @@ const Chatbot = () => {
     }
   };
 
+  const handleDetailedFeedback = async () => {
+    if (!feedbackText.trim() || !feedbackModal) return;
+
+    try {
+      await fetch(`${API_BASE_URL}/api/feedback/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message_id: feedbackModal,
+          feedback_type: 'detailed_feedback',
+          feedback_text: feedbackText
+        })
+      });
+
+      setMessages(prev => prev.map(msg =>
+        msg.messageId === feedbackModal
+          ? { ...msg, feedback: 'detailed', feedbackText: feedbackText }
+          : msg
+      ));
+
+      setFeedbackModal(null);
+      setFeedbackText('');
+    } catch (error) {
+      console.error('Detailed feedback error:', error);
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -141,11 +172,6 @@ const Chatbot = () => {
                     <div className="bot-eye"></div>
                   </div>
                 </div>
-              </div>
-              <div className="header-text">
-                <h3>VoxelBox Assistant</h3>
-                <span className="status-dot"></span>
-                <span className="status-text">Online</span>
               </div>
             </div>
             <div className="header-actions">
@@ -199,12 +225,23 @@ const Chatbot = () => {
                           <path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3zm7-13h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17" strokeWidth="2" strokeLinecap="round"/>
                         </svg>
                       </button>
+                      <button 
+                        onClick={() => setFeedbackModal(message.messageId)}
+                        className="feedback-btn write-feedback"
+                        title="Write detailed feedback"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" strokeWidth="2" strokeLinecap="round"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
                     </div>
                   )}
 
                   {message.feedback && (
                     <div className="feedback-given">
-                      {message.feedback === 'thumbs_up' ? '👍' : '👎'} Feedback submitted
+                      {message.feedback === 'thumbs_up' ? '👍' : message.feedback === 'thumbs_down' ? '👎' : '✏️'} 
+                      {message.feedbackText ? `Feedback: "${message.feedbackText}"` : 'Feedback submitted'}
                     </div>
                   )}
                 </div>
@@ -252,6 +289,42 @@ const Chatbot = () => {
                 <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
+          </div>
+        </div>
+      )}
+
+      {feedbackModal && (
+        <div className="feedback-modal-overlay">
+          <div className="feedback-modal">
+            <h3>Write Your Feedback</h3>
+            <textarea
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              placeholder="Please share your feedback on this response..."
+              className="feedback-textarea"
+              maxLength={500}
+            />
+            <div className="feedback-modal-footer">
+              <span className="char-count">{feedbackText.length}/500</span>
+              <div className="buttons">
+                <button 
+                  onClick={() => {
+                    setFeedbackModal(null);
+                    setFeedbackText('');
+                  }}
+                  className="modal-btn cancel-btn"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDetailedFeedback}
+                  disabled={!feedbackText.trim()}
+                  className="modal-btn submit-btn"
+                >
+                  Submit Feedback
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
