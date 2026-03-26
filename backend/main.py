@@ -114,15 +114,51 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 if api_config.cors.enabled:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=[
+            "http://172.16.68.4:8042",   # deployed React frontend
+            "http://172.16.68.4:8000",   # backend self-reference
+            "http://localhost:3000",      # local React dev
+            "http://localhost:8501",      # local Streamlit dev
+            "http://127.0.0.1:3000",     # local React dev (alt)
+            "http://127.0.0.1:8501",     # local Streamlit dev (alt)
+        ],
+        allow_credentials=False,         # must be False when using IP-based broad origins
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    logger.info("CORS enabled for all origins")
+    logger.info("CORS enabled")
 
 # Add GZip compression
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# ── Security middleware - block malicious requests ───────────────────────────
+BLOCKED_PATTERNS = [
+    "etc/passwd", "etc/shadow",
+    "../", "..\\",
+    ".env", ".git",
+    "wp-admin", "wp-login",
+    "_next/server",
+    "phpmyadmin",
+    "config.php",
+]
+
+@app.middleware("http")
+async def block_malicious_requests(request: Request, call_next):
+    """Block common attack patterns seen in logs"""
+    path = str(request.url.path).lower()
+
+    for pattern in BLOCKED_PATTERNS:
+        if pattern in path:
+            logger.warning(
+                f"Blocked malicious request from {request.client.host} → {path}"
+            )
+            return JSONResponse(
+                status_code=403,
+                content={"error": "Forbidden"}
+            )
+
+    return await call_next(request)
+# ─────────────────────────────────────────────────────────────────────────────
 
 # Register routers
 app.include_router(chat_router)

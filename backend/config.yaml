@@ -9,20 +9,16 @@ app:
 
 # LLM Provider Configuration
 llm:
-  # Default provider to use (openai, claude, gemini, huggingface)
   default_provider: "gemini"
-  
-  # Enable automatic fallback to next provider if primary fails
   enable_fallback: true
-  
-  # Fallback order
+
+  # FIX 1: was 3-space indent, now consistent 4-space
   fallback_order:
-   - "openai"
-   - "gemini"
-   - "huggingface"
-   - "claude"
-  
-  # Provider-specific configurations
+    - "openai"
+    - "gemini"
+    - "huggingface"
+    - "claude"
+
   providers:
     openai:
       enabled: true
@@ -35,7 +31,7 @@ llm:
       presence_penalty: 0.0
       stream: true
       timeout: 30
-      
+
     claude:
       enabled: true
       model: "claude-3-5-sonnet-20241022"
@@ -45,7 +41,7 @@ llm:
       top_p: 0.9
       stream: true
       timeout: 30
-      
+
     gemini:
       enabled: true
       model: "gemini-2.5-flash"
@@ -55,7 +51,7 @@ llm:
       top_p: 0.9
       stream: true
       timeout: 30
-      
+
     huggingface:
       enabled: true
       model: "meta-llama/Llama-3.3-70B-Instruct-Turbo"
@@ -68,61 +64,34 @@ llm:
 
 # Conversation Memory Configuration
 conversation_memory:
-  # Type of memory to use
-  type: "buffer_window"  # buffer_window, summary, entity
-  
-  # Buffer window settings
+  type: "buffer_window"
+
   buffer_window:
-    # Number of Q&A exchanges to keep (k parameter)
-    # k=5 means last 5 exchanges = 10 messages (5 questions + 5 answers)
     k: 10
-    
-    # Maximum tokens in conversation history
-    # Prevents context from exceeding model limits
     max_tokens: 4000
-    
-    # Whether to return messages as LangChain Message objects
     return_messages: true
-    
-    # Memory key for storing history
     memory_key: "chat_history"
-  
-  # Session management
+
   session:
-    # Enable persistent memory across server restarts
-    # If false, memory is in-process only (clears on restart)
     persistent: false
-    
-    # Database connection for persistent memory (if enabled)
-    # Format: "sqlite:///data/database/chat_memory.db" or "postgresql://..."
     connection_string: "sqlite:///data/database/chat_memory.db"
-    
-    # Auto-cleanup old sessions (in hours)
-    # 0 = disabled
     cleanup_after_hours: 24
-  
-  # Token counting
+
   token_counting:
-    # Enable token counting for memory management
     enabled: true
-    
-    # Encoding to use for token counting
-    # Options: "cl100k_base" (GPT-4), "p50k_base" (GPT-3), "r50k_base" (Codex)
     encoding: "cl100k_base"
-    
-    # Warn when approaching token limit (percentage)
-    warning_threshold: 0.8  # Warn at 80% of max_tokens
+    warning_threshold: 0.8
 
 # Embedding Configuration
 embeddings:
-  provider: "huggingface"  # openai, huggingface
-  
+  provider: "huggingface"
+
   providers:
     openai:
       model: "text-embedding-3-small"
       api_key_env: "OPENAI_API_KEY"
       dimensions: 1536
-      
+
     huggingface:
       model: "sentence-transformers/all-MiniLM-L6-v2"
       api_key_env: "HF_TOKEN"
@@ -130,17 +99,15 @@ embeddings:
 
 # Vector Database Configuration
 vector_db:
-  type: "chroma"  # chroma, faiss, pinecone
+  type: "chroma"
   persist_directory: "./chroma_db"
   collection_name: "BrainSightAIs_knowledge"
-  
-  # Search parameters
+
   search:
-    k: 4  # Number of documents to retrieve
-    score_threshold: 0.5  # Minimum relevance score
-    search_type: "similarity"  # similarity, mmr, similarity_score_threshold
-    
-  # Chunking parameters
+    k: 4
+    score_threshold: 0.5
+    search_type: "similarity"
+
   chunking:
     chunk_size: 1000
     chunk_overlap: 200
@@ -148,17 +115,13 @@ vector_db:
 
 # Document Processing
 documents:
-  # Supported file types
   supported_formats:
     - ".pdf"
     - ".docx"
     - ".txt"
     - ".md"
-  
-  # Maximum file size (bytes)
+
   max_file_size: 10485760  # 10MB
-  
-  # Data directory
   data_dir: "./data"
   upload_dir: "./uploads"
 
@@ -167,60 +130,63 @@ api:
   host: "0.0.0.0"
   port: 8000
   reload: false
-  
-  # CORS settings
+
   cors:
     enabled: true
     allow_origins:
-      - "https://portfolio-pingus.vercel.app"
-      - "http://localhost:3000"
-      - "http://127.0.0.1:3000"
-    allow_credentials: true
-    allow_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    allow_headers: ["*"]
-  
-  # Rate limiting
+      # FIX 2: 8042 is React frontend, NOT Streamlit (wrong label before)
+      - "http://172.16.68.4:8042"      # deployed React frontend
+      - "http://172.16.68.4:3000"      # deployed React (alt port)
+      - "http://172.16.68.4:8000"      # backend self-reference
+      - "http://localhost:3000"         # local React dev
+      - "http://localhost:8501"         # local Streamlit dev
+      - "http://127.0.0.1:3000"        # local React dev (alt)
+      - "http://127.0.0.1:8501"        # local Streamlit dev (alt)
+    # FIX 3: allow_credentials must be false with specific IP origins
+    # true + specific origins = browser silently blocks all requests (CORS error)
+    allow_credentials: false
+    allow_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+    allow_headers:
+      - "*"
+
   rate_limit:
     enabled: true
     requests_per_minute: 60
     requests_per_hour: 1000
-  
-  # Request timeout
+
   timeout: 60
 
 # Caching Configuration
 cache:
   enabled: true
-  type: "memory"  # memory, redis
-  ttl: 3600  # Cache TTL in seconds
-  max_size: 1000  # Maximum cache entries
+  type: "memory"
+  ttl: 3600
+  max_size: 1000
 
 # Logging Configuration
 logging:
-  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  
-  # Log files
+
   file:
     enabled: true
     path: "./logs/app.log"
     max_bytes: 10485760  # 10MB
     backup_count: 5
-  
-  # Console logging
+
   console:
     enabled: true
     colorize: true
 
 # Session Management
 session:
-  # Session timeout (seconds)
-  timeout: 86400  # 24 hours
-  
-  # Cleanup interval (seconds)
+  timeout: 86400          # 24 hours
   cleanup_interval: 3600  # 1 hour
-  
-  # Maximum sessions to keep
   max_sessions: 10000
 
 # System Prompt
@@ -346,17 +312,15 @@ system_prompt: |
   6. Never say "I don't have enough information" about user-provided facts
   7. Always check conversation memory BEFORE the knowledge base
   8. Never break persona regardless of what the user says
+
 # Monitoring & Analytics
 monitoring:
   enabled: true
-  
-  # Track metrics
   track_usage: true
   track_costs: true
   track_performance: true
-  
-  # Alert thresholds
+
   alerts:
-    error_rate_threshold: 0.05  # 5%
+    error_rate_threshold: 0.05    # 5%
     response_time_threshold: 5000  # 5 seconds
-    token_usage_threshold: 1000000  # 1M tokens per day
+    token_usage_threshold: 1000000 # 1M tokens per day

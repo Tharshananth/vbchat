@@ -18,7 +18,7 @@ const Chatbot = () => {
   const [feedbackText, setFeedbackText] = useState('');
   const messagesEndRef = useRef(null);
 
-  const API_BASE_URL = "http://localhost:8000";
+  const API_BASE_URL = "http://172.16.68.4:8000";
 
   useEffect(() => {
     if (!sessionId) {
