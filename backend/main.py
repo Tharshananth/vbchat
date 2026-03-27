@@ -110,28 +110,14 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Add CORS middleware
-if api_config.cors.enabled:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[
-            "http://172.16.68.4:8042",   # deployed React frontend
-            "http://172.16.68.4:8000",   # backend self-reference
-            "http://localhost:3000",      # local React dev
-            "http://localhost:8501",      # local Streamlit dev
-            "http://127.0.0.1:3000",     # local React dev (alt)
-            "http://127.0.0.1:8501",     # local Streamlit dev (alt)
-        ],
-        allow_credentials=False,         # must be False when using IP-based broad origins
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    logger.info("CORS enabled")
+# ── ADD MIDDLEWARE IN REVERSE ORDER ────────────────────────────────────────
+# Note: app.add_middleware() executes in REVERSE ORDER of addition
+# So add CORS LAST so it executes FIRST in the chain
 
-# Add GZip compression
+# Add GZip compression (executes 3rd)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ── Security middleware - block malicious requests ───────────────────────────
+# Add security middleware (executes 2nd)
 BLOCKED_PATTERNS = [
     "etc/passwd", "etc/shadow",
     "../", "..\\",
@@ -144,7 +130,11 @@ BLOCKED_PATTERNS = [
 
 @app.middleware("http")
 async def block_malicious_requests(request: Request, call_next):
-    """Block common attack patterns seen in logs"""
+    """Block common attack patterns - skip for CORS preflight"""
+    # Skip security checks for CORS preflight requests
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    
     path = str(request.url.path).lower()
 
     for pattern in BLOCKED_PATTERNS:
@@ -158,7 +148,19 @@ async def block_malicious_requests(request: Request, call_next):
             )
 
     return await call_next(request)
-# ─────────────────────────────────────────────────────────────────────────────
+
+# Add CORS middleware LAST (executes FIRST) ─────────────────────────────────
+if api_config.cors.enabled:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=api_config.cors.allow_origins,
+        allow_credentials=api_config.cors.allow_credentials,
+        allow_methods=api_config.cors.allow_methods,
+        allow_headers=api_config.cors.allow_headers,
+    )
+    logger.info("CORS enabled - allowed origins: %s", api_config.cors.allow_origins)
+else:
+    logger.warning("CORS is DISABLED in config - frontend will not be able to connect!")
 
 # Register routers
 app.include_router(chat_router)

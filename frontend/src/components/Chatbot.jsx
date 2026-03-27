@@ -18,7 +18,10 @@ const Chatbot = () => {
   const [feedbackText, setFeedbackText] = useState('');
   const messagesEndRef = useRef(null);
 
-  const API_BASE_URL = "http://172.16.68.4:8000";
+  // API URL: Use environment variable if set, otherwise auto-detect current hostname
+  // Localhost -> http://localhost:8000
+  // Public IP -> http://172.16.68.4:8000 (or whatever IP/domain is used)
+  const API_BASE_URL = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:8000`;
 
   useEffect(() => {
     if (!sessionId) {

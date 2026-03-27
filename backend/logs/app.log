@@ -5946,3 +5946,134 @@
 2026-03-02 13:27:05,441 - app - INFO - POST /api/chat/
 2026-03-02 13:27:10,068 - app - INFO - Response: 200
 2026-03-02 16:28:01,250 - app - INFO - Shutting down application...
+2026-03-26 23:02:36,014 - app - INFO - CORS enabled
+2026-03-26 23:02:36,029 - app - INFO - ============================================================
+2026-03-26 23:02:36,030 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-03-26 23:02:36,031 - app - INFO - Environment: production
+2026-03-26 23:02:36,031 - app - INFO - ============================================================
+2026-03-26 23:02:36,042 - app - INFO - Database initialized
+2026-03-26 23:02:36,043 - app - INFO - Initializing vector store...
+2026-03-26 23:02:44,733 - app - INFO - Vector store ready with 342 documents
+2026-03-26 23:02:44,735 - app - INFO - Available LLM providers: None
+2026-03-26 23:02:44,736 - app - INFO - Default provider: gemini
+2026-03-26 23:02:44,737 - app - INFO - Startup complete
+2026-03-26 23:02:44,737 - app - INFO - ============================================================
+2026-03-26 23:10:28,582 - app - INFO - Shutting down application...
+2026-03-26 23:10:54,424 - app - INFO - CORS enabled
+2026-03-26 23:10:54,432 - app - INFO - ============================================================
+2026-03-26 23:10:54,432 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-03-26 23:10:54,432 - app - INFO - Environment: production
+2026-03-26 23:10:54,433 - app - INFO - ============================================================
+2026-03-26 23:10:54,444 - app - INFO - Database initialized
+2026-03-26 23:10:54,445 - app - INFO - Initializing vector store...
+2026-03-26 23:11:02,353 - app - INFO - Vector store ready with 342 documents
+2026-03-26 23:11:03,979 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-03-26 23:11:03,979 - app - INFO - Default provider: gemini
+2026-03-26 23:11:03,980 - app - INFO - Startup complete
+2026-03-26 23:11:03,981 - app - INFO - ============================================================
+2026-03-26 23:11:51,123 - app - INFO - GET /docs
+2026-03-26 23:11:51,128 - app - INFO - Response: 200
+2026-03-26 23:11:52,480 - app - INFO - GET /openapi.json
+2026-03-26 23:11:52,515 - app - INFO - Response: 200
+2026-03-26 23:38:01,004 - app - INFO - OPTIONS /api/chat/
+2026-03-26 23:38:01,049 - app - INFO - Response: 400
+2026-03-26 23:39:12,189 - app - INFO - Shutting down application...
+2026-03-26 23:39:58,707 - app - INFO - CORS enabled with origins: ['http://172.16.68.4:8042', 'http://172.16.68.4:3000', 'http://172.16.68.4:8000', 'http://localhost:3000', 'http://localhost:8501', 'http://127.0.0.1:3000', 'http://127.0.0.1:8501']
+2026-03-26 23:39:58,751 - app - INFO - ============================================================
+2026-03-26 23:39:58,755 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-03-26 23:39:58,759 - app - INFO - Environment: production
+2026-03-26 23:39:58,760 - app - INFO - ============================================================
+2026-03-26 23:39:58,782 - app - INFO - Database initialized
+2026-03-26 23:39:58,784 - app - INFO - Initializing vector store...
+2026-03-26 23:40:06,876 - app - INFO - Vector store ready with 342 documents
+2026-03-26 23:40:08,797 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-03-26 23:40:08,798 - app - INFO - Default provider: gemini
+2026-03-26 23:40:08,798 - app - INFO - Startup complete
+2026-03-26 23:40:08,799 - app - INFO - ============================================================
+2026-03-26 23:40:23,693 - app - INFO - GET /health
+2026-03-26 23:40:23,703 - app - INFO - Response: 200
+2026-03-26 23:41:03,917 - app - INFO - Shutting down application...
+2026-03-26 23:41:47,837 - app - INFO - CORS enabled - allowed origins: ['http://172.16.68.4:8042', 'http://172.16.68.4:3000', 'http://172.16.68.4:8000', 'http://localhost:3000', 'http://localhost:8501', 'http://127.0.0.1:3000', 'http://127.0.0.1:8501']
+2026-03-26 23:41:47,852 - app - INFO - ============================================================
+2026-03-26 23:41:47,853 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-03-26 23:41:47,854 - app - INFO - Environment: production
+2026-03-26 23:41:47,854 - app - INFO - ============================================================
+2026-03-26 23:41:47,867 - app - INFO - Database initialized
+2026-03-26 23:41:47,868 - app - INFO - Initializing vector store...
+2026-03-26 23:41:56,601 - app - INFO - Vector store ready with 342 documents
+2026-03-26 23:41:58,213 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-03-26 23:41:58,214 - app - INFO - Default provider: gemini
+2026-03-26 23:41:58,215 - app - INFO - Startup complete
+2026-03-26 23:41:58,216 - app - INFO - ============================================================
+2026-03-26 23:41:58,383 - app - INFO - OPTIONS /api/chat/
+2026-03-26 23:41:58,391 - app - INFO - OPTIONS /api/chat/
+2026-03-26 23:41:58,397 - app - INFO - OPTIONS /api/chat/
+2026-03-26 23:41:58,398 - app - INFO - POST /api/chat/
+2026-03-26 23:41:58,408 - app - INFO - GET /health
+2026-03-26 23:42:39,547 - app - INFO - CORS enabled - allowed origins: ['http://172.16.68.4:8042', 'http://172.16.68.4:3000', 'http://172.16.68.4:8000', 'http://localhost:3000', 'http://localhost:8042', 'http://localhost:8501', 'http://127.0.0.1:3000', 'http://127.0.0.1:8042', 'http://127.0.0.1:8501']
+2026-03-26 23:42:39,567 - app - INFO - ============================================================
+2026-03-26 23:42:39,568 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-03-26 23:42:39,569 - app - INFO - Environment: production
+2026-03-26 23:42:39,569 - app - INFO - ============================================================
+2026-03-26 23:42:39,584 - app - INFO - Database initialized
+2026-03-26 23:42:39,585 - app - INFO - Initializing vector store...
+2026-03-26 23:42:55,146 - app - INFO - Vector store ready with 342 documents
+2026-03-26 23:42:56,835 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-03-26 23:42:56,838 - app - INFO - Default provider: gemini
+2026-03-26 23:42:56,839 - app - INFO - Startup complete
+2026-03-26 23:42:56,840 - app - INFO - ============================================================
+2026-03-26 23:42:56,950 - app - INFO - GET /health
+2026-03-26 23:42:56,987 - app - INFO - Response: 200
+2026-03-26 23:42:59,089 - app - INFO - OPTIONS /api/chat/
+2026-03-26 23:42:59,091 - app - INFO - Response: 200
+2026-03-26 23:43:01,163 - app - INFO - OPTIONS /api/chat/
+2026-03-26 23:43:01,166 - app - INFO - Response: 200
+2026-03-26 23:43:03,226 - app - INFO - OPTIONS /api/chat/
+2026-03-26 23:43:03,228 - app - INFO - Response: 200
+2026-03-26 23:43:05,277 - app - INFO - OPTIONS /api/chat/
+2026-03-26 23:43:05,293 - app - INFO - Response: 200
+2026-03-26 23:43:07,345 - app - INFO - POST /api/chat/
+2026-03-26 23:43:16,411 - app - INFO - Response: 200
+2026-03-26 23:43:33,362 - app - INFO - OPTIONS /api/chat/
+2026-03-26 23:43:33,363 - app - INFO - Response: 200
+2026-03-26 23:43:33,369 - app - INFO - POST /api/chat/
+2026-03-26 23:43:40,239 - app - INFO - Response: 200
+2026-03-26 23:44:02,568 - app - INFO - POST /api/chat/
+2026-03-26 23:44:06,655 - app - INFO - Response: 200
+2026-03-27 00:32:01,235 - app - INFO - Shutting down application...
+2026-03-27 21:23:28,207 - app - INFO - CORS enabled - allowed origins: ['http://172.16.68.4:8042', 'http://172.16.68.4:3000', 'http://172.16.68.4:8000', 'http://localhost:3000', 'http://localhost:8042', 'http://localhost:8501', 'http://127.0.0.1:3000', 'http://127.0.0.1:8042', 'http://127.0.0.1:8501']
+2026-03-27 21:23:28,245 - app - INFO - ============================================================
+2026-03-27 21:23:28,247 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-03-27 21:23:28,249 - app - INFO - Environment: production
+2026-03-27 21:23:28,251 - app - INFO - ============================================================
+2026-03-27 21:23:28,283 - app - INFO - Database initialized
+2026-03-27 21:23:28,285 - app - INFO - Initializing vector store...
+2026-03-27 21:23:36,296 - app - INFO - Vector store ready with 342 documents
+2026-03-27 21:23:39,394 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-03-27 21:23:39,396 - app - INFO - Default provider: gemini
+2026-03-27 21:23:39,398 - app - INFO - Startup complete
+2026-03-27 21:23:39,399 - app - INFO - ============================================================
+2026-03-27 21:29:51,126 - app - INFO - OPTIONS /api/chat/
+2026-03-27 21:29:51,142 - app - INFO - Response: 200
+2026-03-27 21:29:51,151 - app - INFO - POST /api/chat/
+2026-03-27 21:30:02,661 - app - INFO - Response: 200
+2026-03-27 21:31:02,063 - app - INFO - POST /api/chat/
+2026-03-27 21:31:08,173 - app - INFO - Response: 200
+2026-03-27 22:06:00,937 - app - INFO - Shutting down application...
+2026-03-27 22:06:35,762 - app - INFO - CORS enabled - allowed origins: ['http://172.16.68.4:8042', 'http://172.16.68.4:3000', 'http://172.16.68.4:8000', 'http://localhost:3000', 'http://localhost:8042', 'http://localhost:8501', 'http://127.0.0.1:3000', 'http://127.0.0.1:8042', 'http://127.0.0.1:8501']
+2026-03-27 22:06:35,771 - app - INFO - ============================================================
+2026-03-27 22:06:35,772 - app - INFO - Starting BrainSightAI Chatbot v2.0.0
+2026-03-27 22:06:35,772 - app - INFO - Environment: production
+2026-03-27 22:06:35,773 - app - INFO - ============================================================
+2026-03-27 22:06:35,783 - app - INFO - Database initialized
+2026-03-27 22:06:35,783 - app - INFO - Initializing vector store...
+2026-03-27 22:06:40,634 - app - INFO - Vector store ready with 342 documents
+2026-03-27 22:06:41,311 - app - INFO - Available LLM providers: openai, claude, gemini, huggingface
+2026-03-27 22:06:41,311 - app - INFO - Default provider: gemini
+2026-03-27 22:06:41,313 - app - INFO - Startup complete
+2026-03-27 22:06:41,314 - app - INFO - ============================================================
+2026-03-27 22:07:00,879 - app - INFO - OPTIONS /api/chat/
+2026-03-27 22:07:00,879 - app - INFO - Response: 200
+2026-03-27 22:07:00,884 - app - INFO - POST /api/chat/
+2026-03-27 22:07:04,485 - app - INFO - Response: 200
+2026-03-27 22:07:20,586 - app - INFO - Shutting down application...
